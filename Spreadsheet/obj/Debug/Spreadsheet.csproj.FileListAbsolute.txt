@@ -1,0 +1,9 @@
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\bin\Debug\Spreadsheet.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\bin\Debug\Spreadsheet.pdb
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\bin\Debug\DependencyGraph.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\bin\Debug\Formula.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\bin\Debug\DependencyGraph.xml
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\bin\Debug\Formula.xml
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\obj\Debug\Spreadsheet.csprojResolveAssemblyReference.cache
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\obj\Debug\Spreadsheet.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\Spreadsheet\obj\Debug\Spreadsheet.pdb

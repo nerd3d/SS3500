@@ -1,0 +1,11 @@
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\DevelopmentTest.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\DevelopmentTest.pdb
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\Formula.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\Spreadsheet.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\DependencyGraph.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\Spreadsheet.pdb
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\Formula.xml
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\bin\Debug\DependencyGraph.xml
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\obj\Debug\DevelopmentTest.csprojResolveAssemblyReference.cache
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\obj\Debug\DevelopmentTest.dll
+C:\Users\nerd3\Source\Repos\cs3500\PS4\DevelopmentTest\obj\Debug\DevelopmentTest.pdb
