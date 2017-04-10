@@ -30,12 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DependencyGraph">
-      <HintPath>..\Resources\Libraries\DependencyGraph.dll</HintPath>
-    </Reference>
-    <Reference Include="Formula">
-      <HintPath>..\Resources\Libraries\Formula.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
