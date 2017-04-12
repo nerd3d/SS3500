@@ -48,7 +48,8 @@ namespace SS
             form.FormClosed += (o, e) => { if (--formCount <= 0) ExitThread(); };
 
             // Run the form
-            form.Show();
+            if(form!=null)
+              form.Show();
         }
 
     }
