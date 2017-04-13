@@ -20,8 +20,6 @@ namespace SS {
     /// Constructor for new blank Form
     /// </summary>
     public SSForm() {
-      // When a new Form is created, a server connection is required
-      ConnectionDialogBox(); 
 
       InitializeComponent();
       personalSpreadsheet = new Spreadsheet(validAddress, s => s.ToUpper(), "PS6");
@@ -61,21 +59,6 @@ namespace SS {
 
     }
 
-    /// <summary>
-    /// Displays a Connection Dialog Box
-    /// </summary>
-    /// <returns>the name of the file to open</returns>
-    private string ConnectionDialogBox() {
-      string filename = null;
-      // open a connection dialog box (make a new custom form?)
-      //  -> request input: server name
-      // attempt to connect to server
-      // upon success: open filename dialog box
-      //  -> request input: filename
-      // return the filename
-
-      return filename;
-    }
 
     /// <summary>
     /// Given the address to a cell; it is converted and returns
@@ -127,7 +110,7 @@ namespace SS {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void newToolStripMenuItem_Click(object sender, EventArgs e) {
-      SpreadsheetContext.getAppContext().RunForm(new SSForm());
+      SpreadsheetContext.getAppContext().RunForm(new ConnectionDialog());
 
     }
 

@@ -68,7 +68,7 @@ namespace SS
 
             // Start an application context and run one form inside it
             SpreadsheetContext appContext = SpreadsheetContext.getAppContext();
-            appContext.RunForm(new SSForm());
+            appContext.RunForm(new ConnectionDialog());
             Application.Run(appContext);
 
         }
