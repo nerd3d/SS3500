@@ -1,36 +1,32 @@
-﻿namespace SS
-{
-    partial class SSForm
-    {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
-        private System.ComponentModel.IContainer components = null;
+﻿namespace SS {
+  partial class SSForm {
+    /// <summary>
+    /// Required designer variable.
+    /// </summary>
+    private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+    /// <summary>
+    /// Clean up any resources being used.
+    /// </summary>
+    /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+    protected override void Dispose(bool disposing) {
+      if (disposing && (components != null)) {
+        components.Dispose();
+      }
+      base.Dispose(disposing);
+    }
 
-        #region Windows Form Designer generated code
+    #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent()
-        {
+    /// <summary>
+    /// Required method for Designer support - do not modify
+    /// the contents of this method with the code editor.
+    /// </summary>
+    private void InitializeComponent() {
       this.spreadsheetPanel1 = new SS.SpreadsheetPanel();
       this.menuStrip1 = new System.Windows.Forms.MenuStrip();
       this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
       this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -40,14 +36,15 @@
       this.valueBox = new System.Windows.Forms.TextBox();
       this.contentBox = new System.Windows.Forms.TextBox();
       this.ContentButton = new System.Windows.Forms.Button();
-      this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.menuStrip1.SuspendLayout();
       this.SuspendLayout();
       // 
       // spreadsheetPanel1
       // 
-      this.spreadsheetPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+      this.spreadsheetPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
       this.spreadsheetPanel1.Location = new System.Drawing.Point(0, 80);
       this.spreadsheetPanel1.Name = "spreadsheetPanel1";
@@ -61,6 +58,7 @@
       this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
       this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
+            this.editToolStripMenuItem,
             this.helpToolStripMenuItem});
       this.menuStrip1.Location = new System.Drawing.Point(0, 0);
       this.menuStrip1.Name = "menuStrip1";
@@ -79,6 +77,15 @@
       this.fileToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F)));
       this.fileToolStripMenuItem.Size = new System.Drawing.Size(50, 29);
       this.fileToolStripMenuItem.Text = "&File";
+      // 
+      // newToolStripMenuItem
+      // 
+      this.newToolStripMenuItem.Name = "newToolStripMenuItem";
+      this.newToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
+      this.newToolStripMenuItem.Size = new System.Drawing.Size(291, 30);
+      this.newToolStripMenuItem.Text = "&New Connection";
+      this.newToolStripMenuItem.ToolTipText = "Create New Spreadsheet";
+      this.newToolStripMenuItem.Click += new System.EventHandler(this.newToolStripMenuItem_Click);
       // 
       // toolStripMenuItem1
       // 
@@ -141,7 +148,7 @@
       // contentBox
       // 
       this.contentBox.AcceptsReturn = true;
-      this.contentBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+      this.contentBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
       this.contentBox.Location = new System.Drawing.Point(328, 37);
       this.contentBox.Name = "contentBox";
@@ -161,14 +168,21 @@
       this.ContentButton.UseVisualStyleBackColor = true;
       this.ContentButton.Click += new System.EventHandler(this.ContentButton_Click);
       // 
-      // newToolStripMenuItem
+      // editToolStripMenuItem
       // 
-      this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-      this.newToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-      this.newToolStripMenuItem.Size = new System.Drawing.Size(291, 30);
-      this.newToolStripMenuItem.Text = "&New Connection";
-      this.newToolStripMenuItem.ToolTipText = "Create New Spreadsheet";
-      this.newToolStripMenuItem.Click += new System.EventHandler(this.newToolStripMenuItem_Click);
+      this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.undoToolStripMenuItem});
+      this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+      this.editToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
+      this.editToolStripMenuItem.Text = "&Edit";
+      // 
+      // undoToolStripMenuItem
+      // 
+      this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
+      this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+      this.undoToolStripMenuItem.Size = new System.Drawing.Size(211, 30);
+      this.undoToolStripMenuItem.Text = "Undo";
+      this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
       // 
       // SSForm
       // 
@@ -190,23 +204,25 @@
       this.ResumeLayout(false);
       this.PerformLayout();
 
-        }
+    }
 
-        #endregion
+    #endregion
 
-        private SS.SpreadsheetPanel spreadsheetPanel1;
-        private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-        private System.Windows.Forms.TextBox addressBox;
-        private System.Windows.Forms.TextBox valueBox;
-        private System.Windows.Forms.TextBox contentBox;
-        private System.Windows.Forms.Button ContentButton;
+    private SS.SpreadsheetPanel spreadsheetPanel1;
+    private System.Windows.Forms.MenuStrip menuStrip1;
+    private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+    private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+    private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+    private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+    private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
+    private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+    private System.Windows.Forms.TextBox addressBox;
+    private System.Windows.Forms.TextBox valueBox;
+    private System.Windows.Forms.TextBox contentBox;
+    private System.Windows.Forms.Button ContentButton;
     private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
+    private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
+    private System.Windows.Forms.ToolStripMenuItem undoToolStripMenuItem;
   }
 }
 

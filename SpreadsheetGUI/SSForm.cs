@@ -148,30 +148,6 @@ namespace SS {
       }
     }
 
-    /// <summary>
-    /// Selecting Open the app will load up the selected spreadsheet.
-    ///     After the spreadsheet has been made from the constructor,
-    ///     The panel will get all cells that have content in the spreadsheet
-    ///     and draw them onto the GUI. 
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void openToolStripMenuItem_Click(object sender, EventArgs e) {
-      using (OpenFileDialog OFD = new OpenFileDialog()) {
-        OFD.Filter = "SPRD(*.sprd)|*.sprd|All Files|*.*";
-        OFD.InitialDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments); // Shows the documents folder for the system.
-        if (OFD.ShowDialog() == DialogResult.OK)//Will not do work if cancel is selected instead.
-        {
-          string version = personalSpreadsheet.GetSavedVersion(OFD.FileName);
-          if (version != "PS6") {
-            DialogResult badOpen = MessageBox.Show("Spreadsheet contains conflict with version information or format.",
-            "Open File Failure Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-          } else
-            SpreadsheetContext.getAppContext().RunForm(new SSForm(OFD.FileName));
-        }
-
-      }
-    }
 
     /// <summary>
     /// Will populate the banner with content if it is present and highlight the text 
@@ -269,57 +245,6 @@ namespace SS {
     }
 
     /// <summary>
-    /// User selects to Save Current Spreadsheet.
-    ///     If Spreadsheet already has FileName, save to that filename
-    ///     If Spreadsheet is untitled, run SaveAs method.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void saveToolStripMenuItem_Click(object sender, EventArgs e) {
-      if (fileName != null) // if the file has been saved before...
-      {
-        if (System.IO.File.Exists(fileName)) // check if the file is still there
-        {
-          personalSpreadsheet.Save(fileName);
-          this.Text = fileName;
-        } else  // if not, call saveAs
-         {
-          saveAsToolStripMenuItem_Click(sender, e);
-        }
-      } else // if not, call saveAs
-       {
-        saveAsToolStripMenuItem_Click(sender, e);
-      }
-    }
-
-    /// <summary>
-    /// Shows a File Dialog to allow user to define a file name and path.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void saveAsToolStripMenuItem_Click(object sender, EventArgs e) {
-      using (SaveFileDialog SFD = new SaveFileDialog()) // Show new SaveFileDialog
-      {
-        SFD.Filter = "SPRD(*.sprd)|*.sprd|All Files|*.*";
-        SFD.InitialDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        if (SFD.ShowDialog() == DialogResult.OK) // Filepath selected
-        {
-          if (SFD.CheckPathExists) // validate path is on machine
-          {
-            if (!SFD.CheckFileExists) // if file doesn't exist, go ahead and save
-            {
-              fileName = SFD.FileName;
-              personalSpreadsheet.Save(fileName);
-            }
-
-            this.Text = fileName;
-          }
-        }
-
-      }
-    }
-
-    /// <summary>
     /// Looks for key presses while in the content dialog box
     ///     Enter: calls the content button method
     ///     Others can be added for more features.
@@ -400,6 +325,15 @@ namespace SS {
     private void spreadsheetPanel1_Enter(object sender, EventArgs e) {
       contentBox.SelectAll();
       contentBox.Focus();
+    }
+
+    /// <summary>
+    /// Sends the "Undo" command to the server
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void undoToolStripMenuItem_Click(object sender, EventArgs e) {
+
     }
   }
 }
