@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace SS {
   public partial class ConnectionDialog : Form {
-    public string server { get; private set; }
+    public string servername { get; private set; }
 
     /// <summary>
     /// Form Constructor
@@ -27,11 +27,22 @@ namespace SS {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void Accept1_Click(object sender, EventArgs e) {
-      server = ServerInput1.Text+".eng.utah.edu";
+      servername = ServerInput1.Text+".eng.utah.edu";
 
-      SpreadsheetContext.getAppContext().RunForm(new DocNameDialog());
+      // Attempt to connect to the server.  We want this blocking and to only exit upon success.
 
-      Close();
+      if (ServerInput1.Text == "true") { /* <<< Replace with connection success bool*/
+        // If connection successful, open Document Name Dialog and close this window
+        SpreadsheetContext.getAppContext().RunForm(new DocNameDialog());
+
+        Close();
+      } else {
+        // connection failed should let the user know that something went wrong
+        DialogResult badConnect = MessageBox.Show( "Connection to Server failed.",
+                                                "Connection Failure Warning", 
+                                                MessageBoxButtons.OK, 
+                                                MessageBoxIcon.Warning);
+      }
     }
 
     /// <summary>

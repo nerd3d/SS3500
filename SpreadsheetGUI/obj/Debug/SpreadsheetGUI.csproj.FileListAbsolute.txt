@@ -79,3 +79,5 @@ C:\Users\Chris\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.Prope
 C:\Users\Chris\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.csproj.GenerateResource.Cache
 C:\Users\Chris\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SS.ConnectionDialog.resources
 C:\Users\Chris\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SS.DocNameDialog.resources
+C:\Users\nerd3\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SS.ConnectionDialog.resources
+C:\Users\nerd3\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SS.DocNameDialog.resources
