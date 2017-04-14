@@ -393,7 +393,7 @@ namespace SS {
     }
 
     /// <summary>
-    /// If/When spreadsheetPannel ever gets focus, immediately give focs to the contentBox
+    /// If/When spreadsheetPanel ever gets focus, immediately give focs to the contentBox
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
