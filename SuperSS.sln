@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevelopmentTest", "DevelopmentTest\DevelopmentTest.csproj", "{9119342F-C255-494E-A54D-54F4BC8F417A}"
 EndProject
@@ -10,6 +10,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spreadsheet", "Spreadsheet\Spreadsheet.csproj", "{8449DAF6-5F73-4CB1-AA64-9481BDD3F75E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadsheetGUI", "SpreadsheetGUI\SpreadsheetGUI.csproj", "{DDC3EEF2-0DA4-4CC3-B212-9E722FD189EA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{19C2D9F1-DD62-4161-9360-E1A674600CA9} = {19C2D9F1-DD62-4161-9360-E1A674600CA9}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatClient", "clientNetworkController\clientNetworkController\ChatClient\ChatClient.csproj", "{19C2D9F1-DD62-4161-9360-E1A674600CA9}"
 EndProject
