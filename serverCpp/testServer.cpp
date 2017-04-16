@@ -13,8 +13,12 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 using namespace std;
+
+// http://www.cplusplus.com/forum/unices/116977/
+void *task1(void *);
 
 int main()
 {
@@ -44,14 +48,17 @@ int main()
     //     6. serv_addr will contain the address of the server
     //     7. socklen_t  is an intr type of width of at least 32 bits
     // */
-  int client, server;
+  int client, connectionFd;
   int portNum = 2113;
   bool isExit = false;
   int bufsize = 1024;
   char buffer[bufsize];
 
-     struct sockaddr_in server_addr;
-     socklen_t size;
+  // when a client connects they join on a new thread. That thread is stored in threads[]
+  pthread_t threads[10];
+
+  struct sockaddr_in server_addr;
+  socklen_t size;
 
     // /* ---------- ESTABLISHING SOCKET CONNECTION ----------*/
     // /* --------------- socket() function ------------------*/
@@ -91,6 +98,7 @@ int main()
         to a port number in network byte order.
     */
 
+    //bzero((char*) &server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htons(INADDR_ANY);
     server_addr.sin_port = htons(portNum);
@@ -120,7 +128,7 @@ int main()
     /* ------------- LISTENING CALL ------------- */
     /* ---------------- listen() ---------------- */
 
-    listen(client, 1);
+    listen(client, 5);
 
     /* 
         The listen system call allows the process to listen 
@@ -150,18 +158,42 @@ int main()
         of this structure.
     */
 
-    int clientCount = 1;
-    server = accept(client,(struct sockaddr *)&server_addr,&size);
+    int clientCount = 0;
 
-    // first check if it is valid or not
-    if (server < 0) 
-        cout << "=> Error on accepting..." << endl;
+    while(clientCount < 10)
+      {
+	cout << "Listening for client" << endl;
+        connectionFd = accept(client,(struct sockaddr *)&server_addr,&size);
 
-     while (server > 0) 
+	// first check if it is valid or not
+	if (connectionFd < 0) 
+	  {
+	    cout << "=> Error on accepting..." << endl;
+	    return 0;
+	  }
+	else
+	  cout << "=> Connection Successful" << endl;
+
+
+	pthread_create(&threads[clientCount], NULL, task1, NULL);
+	
+	clientCount++;
+      }
+
+
+
+    for(int i = 0; i < 10; i++)
+      {
+	pthread_join(threads[i],NULL);
+      }
+
+
+
+     while (connectionFd > 0) 
     {
 	     memset(buffer, 0, bufsize);
         strcpy(buffer, "=> Server connected...\n");
-        send(server, buffer, bufsize, 0);
+        send(connectionFd, buffer, bufsize, 0);
         cout << "=> Connected with the client #" << clientCount << ", you are good to go..." << endl;
         cout << "\n=> Enter # to end the connection\n" << endl;
 
@@ -180,7 +212,7 @@ int main()
         do {
 
 	     memset(buffer, 0, bufsize);
-            recv(server, buffer, bufsize, 0);
+            recv(connectionFd, buffer, bufsize, 0);
             cout << buffer << " ";
             if (*buffer == '#') {
                 *buffer = '*';
@@ -194,9 +226,9 @@ int main()
             do {
 	      cin >> buffer;
 		
-                send(server, buffer, bufsize, 0);
+                send(connectionFd, buffer, bufsize, 0);
                 if (*buffer == '#') {
-                    send(server, buffer, bufsize, 0);
+                    send(connectionFd, buffer, bufsize, 0);
                     *buffer = '*';
                     isExit = true;
                 }
@@ -204,7 +236,7 @@ int main()
 
             cout << "Client: ";
             do {
-                recv(server, buffer, bufsize, 0);
+                recv(connectionFd, buffer, bufsize, 0);
                 cout << buffer << " ";
 	       
                 if (*buffer == '#') {
@@ -233,7 +265,7 @@ int main()
 
         // inet_ntoa converts packet data to IP, which was taken from client
         cout << "\n\n=> Connection terminated with IP " << inet_ntoa(server_addr.sin_addr);
-        close(server);
+        close(connectionFd);
         cout << "\nGoodbye..." << endl;
         isExit = false;
         exit(1);
