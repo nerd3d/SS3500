@@ -9,12 +9,14 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SpreadsheetUtilities;
 using System.Text.RegularExpressions;
+using ChatClient;
 
 namespace SS {
   public partial class SSForm : Form {
     // Spreadsheet Data associated with current Form
     private Spreadsheet personalSpreadsheet;
     private string fileName = null;
+    private NetworkWarden warden;
 
     /// <summary>
     /// Constructor for new blank Form
@@ -26,6 +28,19 @@ namespace SS {
       this.Text = "NewSpreadsheet";
       addressBox.Text = "A1";
 
+    }
+
+
+    public SSForm(NetworkWarden ward, string filename) {
+      InitializeComponent();
+
+      personalSpreadsheet = new Spreadsheet(validAddress, s => s.ToUpper(), "PS6");
+      this.Text = filename;
+      warden = ward;
+      addressBox.Text = "A1";
+
+      // Send the filename to the server
+      Networking.Send(warden, "Connect\t" + filename + "\t\n");
 
     }
 

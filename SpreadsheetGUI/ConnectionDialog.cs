@@ -7,10 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ChatClient;
+
 
 namespace SS {
   public partial class ConnectionDialog : Form {
     public string servername { get; private set; }
+    private bool validServer;
+    private NetworkWarden warden = null;
 
     /// <summary>
     /// Form Constructor
@@ -30,11 +34,12 @@ namespace SS {
       servername = ServerInput1.Text+".eng.utah.edu";
 
       // Attempt to connect to the server.  We want this blocking and to only exit upon success.
+      Networking.ConnectToServer(Connected, servername);
 
-      if (ServerInput1.Text == "true") { /* <<< Replace with connection success bool*/
+      if (validServer) { /* <<< Replace with connection success bool*/
         // If connection successful, open Document Name Dialog and close this window
-        SpreadsheetContext.getAppContext().RunForm(new DocNameDialog());
-
+        SpreadsheetContext.getAppContext().RunForm(new DocNameDialog(warden));
+        
         Close();
       } else {
         // connection failed should let the user know that something went wrong
@@ -43,6 +48,18 @@ namespace SS {
                                                 MessageBoxButtons.OK, 
                                                 MessageBoxIcon.Warning);
       }
+    }
+
+    /// <summary>
+    /// Callback function upon successful connection attempt
+    /// </summary>
+    /// <param name="warden"></param>
+    private void Connected(NetworkWarden ward) {
+      if (ward != null) {
+        validServer = true;
+        warden = ward;
+      } else
+        validServer = false;
     }
 
     /// <summary>
