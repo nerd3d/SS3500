@@ -13,7 +13,6 @@ using ChatClient;
 namespace SS {
   public partial class ConnectionDialog : Form {
     public string servername { get; private set; }
-    private bool validServer;
     private NetworkWarden warden = null;
 
     /// <summary>
@@ -31,21 +30,23 @@ namespace SS {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void Accept1_Click(object sender, EventArgs e) {
-      servername = ServerInput1.Text+".eng.utah.edu";
+      servername = ServerInput1.Text + ".eng.utah.edu";
 
       // Attempt to connect to the server.  We want this blocking and to only exit upon success.
       Networking.ConnectToServer(Connected, servername);
 
-      if (validServer) { /* <<< Replace with connection success bool*/
+      System.Threading.Thread.Sleep(800);
+
+      if (warden != null) { /* <<< Replace with connection success bool*/
         // If connection successful, open Document Name Dialog and close this window
         SpreadsheetContext.getAppContext().RunForm(new DocNameDialog(warden));
-        
+
         Close();
       } else {
         // connection failed should let the user know that something went wrong
-        DialogResult badConnect = MessageBox.Show( "Connection to Server failed.",
-                                                "Connection Failure Warning", 
-                                                MessageBoxButtons.OK, 
+        DialogResult badConnect = MessageBox.Show("Connection to Server failed.",
+                                                "Connection Failure Warning",
+                                                MessageBoxButtons.OK,
                                                 MessageBoxIcon.Warning);
       }
     }
@@ -56,10 +57,8 @@ namespace SS {
     /// <param name="warden"></param>
     private void Connected(NetworkWarden ward) {
       if (ward != null) {
-        validServer = true;
         warden = ward;
-      } else
-        validServer = false;
+      }
     }
 
     /// <summary>

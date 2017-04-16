@@ -15,22 +15,12 @@ namespace SS {
   public partial class SSForm : Form {
     // Spreadsheet Data associated with current Form
     private Spreadsheet personalSpreadsheet;
-    private string fileName = null;
     private NetworkWarden warden;
 
+
     /// <summary>
-    /// Constructor for new blank Form
+    /// Constructor used for Multi-user Spreadsheet
     /// </summary>
-    public SSForm() {
-
-      InitializeComponent();
-      personalSpreadsheet = new Spreadsheet(validAddress, s => s.ToUpper(), "PS6");
-      this.Text = "NewSpreadsheet";
-      addressBox.Text = "A1";
-
-    }
-
-
     public SSForm(NetworkWarden ward, string filename) {
       InitializeComponent();
 
@@ -39,40 +29,14 @@ namespace SS {
       warden = ward;
       addressBox.Text = "A1";
 
+      // Set warden callback function for server messages
+      warden.callNext = Recieve_Message;
+
       // Send the filename to the server
       Networking.Send(warden, "Connect\t" + filename + "\t\n");
 
     }
 
-    /// <summary>
-    /// Opens an existing Spreadsheet from a file.
-    /// The constuctor will update the GUI on what needs to be displayed.
-    /// </summary>
-    /// <param name="filePath">Path and name of file</param>
-    public SSForm(string filePath) {
-      this.fileName = filePath;
-      InitializeComponent();
-
-      personalSpreadsheet = new Spreadsheet(filePath, validAddress, s => s.ToUpper(), "PS6");
-
-      int col, row;
-      object cellVal;
-      foreach (string cellName in personalSpreadsheet.GetNamesOfAllNonemptyCells())//Assigns the string rep for each cell that is not empty in spreadsheet.
-      {
-        addressToGrid(cellName, out col, out row);// Get the current address based on cell name. 
-        cellVal = personalSpreadsheet.GetCellValue(cellName);
-        spreadsheetPanel1.SetValue(col, row, cellVal.ToString());// Set the value of cell using grid address. 
-
-      }
-      string focusCellValue;
-      spreadsheetPanel1.GetValue(0, 0, out focusCellValue);//Gets the starting positions value. 
-      valueBox.Text = focusCellValue; // Displays the default's value. 
-      addressBox.Text = "A1";
-      contentBox.Text = personalSpreadsheet.GetCellContents(gridToAddress(0, 0)).ToString();
-      fileName = filePath;
-      this.Text = fileName;
-
-    }
 
     /********************************************************************************************
      * Network Comunication Section - Client -> Server
@@ -82,7 +46,15 @@ namespace SS {
     /// Sends the "Edit" command to the server
     /// </summary>
     private void ContentButton_Click(object sender, EventArgs e) {
-      Recieve_Change(sender, e); // temporary to keep spreadsheet functional
+      //Recieve_Change(sender, e); // temporary to keep spreadsheet functional
+
+      int col, row;
+      spreadsheetPanel1.GetSelection(out col, out row);
+      string address = gridToAddress(col, row);
+      string content = contentBox.Text;
+
+      Networking.Send(warden, "Edit\t"+address+"\t"+content+"\t\n");
+
     }
 
     /// <summary>
@@ -121,8 +93,9 @@ namespace SS {
     /// <summary>
     /// recieve hub - decodes message and activate proper command
     /// </summary>
-    public void Recieve_Message() {
-
+    public void Recieve_Message(NetworkWarden ward) {
+      
+      System.Diagnostics.Debug.WriteLine("Message recieved from Server: ");
     }
 
     /// <summary>
