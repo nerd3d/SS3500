@@ -3,6 +3,16 @@
  * Version - 2.0.1
  *
  * Copyright (c) 2016 Hassan M. Yousuf
+
+
+
+
+
+http://stackoverflow.com/questions/10812920/tcp-server-with-multiple-clients-sending-message-back-to-all-connected-clients
+
+
+
+g++ testServer.cpp -lpthread
  */
 
 #include <iostream>
@@ -20,6 +30,7 @@ using namespace std;
 // http://www.cplusplus.com/forum/unices/116977/
 void *task1(void *);
 
+static int connectionFd;
 int main()
 {
     /* ---------- INITIALIZING VARIABLES ---------- */
@@ -48,8 +59,8 @@ int main()
     //     6. serv_addr will contain the address of the server
     //     7. socklen_t  is an intr type of width of at least 32 bits
     // */
-  int client, connectionFd;
-  int portNum = 2113;
+  int client;
+  int portNum = 2114;
   bool isExit = false;
   int bufsize = 1024;
   char buffer[bufsize];
@@ -175,7 +186,7 @@ int main()
 	  cout << "=> Connection Successful" << endl;
 
 
-	pthread_create(&threads[clientCount], NULL, task1, NULL);
+	pthread_create(&threads[clientCount], NULL, task1, 0);
 	
 	clientCount++;
       }
@@ -187,90 +198,34 @@ int main()
 	pthread_join(threads[i],NULL);
       }
 
-
-
-     while (connectionFd > 0) 
-    {
-	     memset(buffer, 0, bufsize);
-        strcpy(buffer, "=> Server connected...\n");
-        send(connectionFd, buffer, bufsize, 0);
-        cout << "=> Connected with the client #" << clientCount << ", you are good to go..." << endl;
-        cout << "\n=> Enter # to end the connection\n" << endl;
-
-        /* 
-            Note that we would only get to this point after a 
-            client has successfully connected to our server. 
-            This reads from the socket. Note that the read() 
-            will block until there is something for it to read 
-            in the socket, i.e. after the client has executed a 
-            the send().
-            It will read either the total number of characters 
-            in the socket or 1024
-        */
-
-        cout << "Client: ";
-        do {
-
-	     memset(buffer, 0, bufsize);
-            recv(connectionFd, buffer, bufsize, 0);
-            cout << buffer << " ";
-            if (*buffer == '#') {
-                *buffer = '*';
-                isExit = true;
-            }
-
-        } while (*buffer != '*');
-
-        do {
-            cout << "\nServer: ";
-            do {
-	      cin >> buffer;
-		
-                send(connectionFd, buffer, bufsize, 0);
-                if (*buffer == '#') {
-                    send(connectionFd, buffer, bufsize, 0);
-                    *buffer = '*';
-                    isExit = true;
-                }
-            } while (*buffer != '*');
-
-            cout << "Client: ";
-            do {
-                recv(connectionFd, buffer, bufsize, 0);
-                cout << buffer << " ";
-	       
-                if (*buffer == '#') {
-                    *buffer == '*';
-                    isExit = true;
-                }
-            } while (*buffer != '*');
-        } while (!isExit);
-
-        /* 
-            Once a connection has been established, both ends 
-            can both read and write to the connection. Naturally, 
-            everything written by the client will be read by the 
-            server, and everything written by the server will be 
-            read by the client.
-        */
-
-        /* ---------------- CLOSE CALL ------------- */
-        /* ----------------- close() --------------- */
-
-        /* 
-            Once the server presses # to end the connection,
-            the loop will break and it will close the server 
-            socket connection and the client connection.
-        */
-
-        // inet_ntoa converts packet data to IP, which was taken from client
-        cout << "\n\n=> Connection terminated with IP " << inet_ntoa(server_addr.sin_addr);
-        close(connectionFd);
-        cout << "\nGoodbye..." << endl;
-        isExit = false;
-        exit(1);
-    }
+    
 
     close(client);
     return 0;
+}
+
+
+void *task1(void* dumbyPt)
+{
+  cout << "Thread #" << pthread_self() << endl;
+  string message;
+  char test[300];
+  bzero(test, 301);
+  
+  strcpy(test, "=> Server connected...\n\n");
+  send(connectionFd, test, 300, 0);
+
+  while(1)
+    {
+      recv(connectionFd, test, 300, 0);
+
+      getline(test, message);
+      cout << "client #" << pthread_self() << " sent " << message << "\n";
+
+      cout << "sending " << message << " to the client\n" << endl;
+      send(connectionFd, message, 300, 0);
+    }
+  
+  cout << "closing thread # " << pthread_self() << endl;
+  close(connectionFd);
 }
