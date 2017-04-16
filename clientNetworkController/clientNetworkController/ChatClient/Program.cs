@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
+using System.Threading;
+
 namespace ChatClient
 {
     /*How Client utilizes this controller:
@@ -22,46 +24,51 @@ namespace ChatClient
     class Program
     {
         static NetworkWarden warden;
-        static string usr;
+        static NetworkWarden listenWarden;
         static void Main(string[] args)
         {
             string hostname = "lab2-24.eng.utah.edu";
             //string hostname = "lab1-7.eng.utah.edu";
             Networking.ConnectToServer(sendName, hostname);
-            Console.WriteLine("Read to chat... give a usrname.");
-            string usr = Console.ReadLine();
-            while(true)
-            {
-                sendMessage();
-                cleanBuffer(warden);
-                Networking.getData(warden);
-            }
+            while (true) { };
         }
         static void sendName(NetworkWarden ward)
         {
             ward.callNext = getNameBack;
-            Networking.Send(ward.socket, usr + ": " + "Praise the Sun" + "\n");
+            Networking.Send(ward, "Praise the Sun" + "\n");
         }
         static void getNameBack(NetworkWarden ward)
         {
             warden = ward;
             Console.WriteLine("server sent spreadsheet: " + warden.message);
             ward.callNext = getNameBack;
-            Networking.Send(ward.socket, usr + ": " + "trying to send chats" + "\n");
-            //ward.callNext = listen;
-            //warden.socket.BeginReceive(warden.buffer, 0, warden.buffer.Length, SocketFlags.None, listen, warden);
-            //Networking.receiveMessage(ward);
+            Networking.Send(ward, "trying to send chats" + "\n");
+            //Networking.Send(ward.socket, "#");
+            listenWarden = new NetworkWarden(ward.socket, ward.ID);
+            getData(listenWarden);
+            sendMessage(warden);
+            //Thread ctThread = new Thread(getData(warden));
+            //ctThread.Start();
         }
-        static void sendMessage()
+        static void sendMessage(NetworkWarden ward)
         {
-            warden.callNext = cleanBuffer;
-            Networking.Send(warden.socket, usr + ": " + Console.ReadLine() + "\n");
+            /*while(warden == null)
+            {
+            }*/
+            ward.callNext = sendMessage;
+            Networking.Send(ward, Console.ReadLine() + "\n");
         }
         static void cleanBuffer(NetworkWarden ward)
         {
             warden = ward;
             warden.message.Clear();
+            sendMessage(warden);
         }
-
+        static void getData(NetworkWarden ward)
+        {
+            listenWarden = ward;
+            listenWarden.callNext = getData;
+            Networking.getData(listenWarden);
+        }
     }
 }
