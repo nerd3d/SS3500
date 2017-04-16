@@ -168,14 +168,14 @@ namespace ChatClient
                     //string[] lines = ss.sb.ToString().Split(new string[] {"\n"}, StringSPlitOptions.None);
                     //warden.message.Clear();
                     //warden.message.Append(newMessage);
-                    Console.WriteLine("Server said: ");
+                    Console.WriteLine("Server said: " + newMessage);
                 }
 
                 warden.callNext(warden);
             }
             catch (Exception e)
             {
-                Console.WriteLine("Receive callback failed. Error occured: " + e);
+                System.Diagnostics.Debug.WriteLine("Receive callback failed. Error occured: " + e);
                 return;
             }
         }
@@ -187,13 +187,13 @@ namespace ChatClient
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="data"></param>
-        public static void Send(Socket socket, String data)
+        public static void Send(NetworkWarden ward, String data)
         {
             data = data.TrimEnd();//removes any leftover spaces
             byte[] bytes = Encoding.UTF8.GetBytes(data + "\n");
             try
             {
-                socket.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, StopSend, socket);
+                ward.socket.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, StopSend, ward);
             }
             catch (Exception e)
             {
@@ -208,8 +208,10 @@ namespace ChatClient
         /// </summary>
         static void StopSend(IAsyncResult ARSTATE)
         {
-            Socket socket = (Socket)ARSTATE.AsyncState;
-            socket.EndSend(ARSTATE);
+            NetworkWarden warden = (NetworkWarden)ARSTATE.AsyncState;
+            warden.socket.EndSend(ARSTATE);
+            //Console.WriteLine("warden callnext: " + (warden.callNext.Method.Name));
+            warden.callNext(warden);
         }
 
         public static void getData(NetworkWarden ward)
