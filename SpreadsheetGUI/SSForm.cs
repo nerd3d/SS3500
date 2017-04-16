@@ -59,6 +59,124 @@ namespace SS {
 
     }
 
+    /********************************************************************************************
+     * Network Comunication Section - Client -> Server
+     ********************************************************************************************/
+
+    /// <summary>
+    /// Sends the "Edit" command to the server
+    /// </summary>
+    private void ContentButton_Click(object sender, EventArgs e) {
+      Recieve_Change(sender, e); // temporary to keep spreadsheet functional
+    }
+
+    /// <summary>
+    /// Sends the "Undo" command to the server
+    /// </summary>
+    private void undoToolStripMenuItem_Click(object sender, EventArgs e) {
+      
+    }
+
+    /// <summary>
+    /// Send the "IsTyping" message to the server
+    /// </summary>
+    private void Send_IsTyping() {
+
+    }
+    /// <summary>
+    /// Send the "DoneTyping" message to the server
+    /// </summary>
+    private void Send_DoneTyping() {
+
+    }
+
+    /// <summary>
+    /// Gracfully close the socket upon closing a spreadsheet.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void SSForm_FormClosing(object sender, FormClosingEventArgs e) {
+      
+    }
+
+    /********************************************************************************************
+     * Network Comunication Section - Server -> Client
+     ********************************************************************************************/
+
+    /// <summary>
+    /// recieve hub - decodes message and activate proper command
+    /// </summary>
+    public void Recieve_Message() {
+
+    }
+
+    /// <summary>
+    /// Pupulates an empty spreadsheet with given data
+    /// </summary>
+    private void Recieve_Startup() {
+
+    }
+
+    /// <summary>
+    /// Recieves a Change from the server and applys it to the spreadsheet
+    /// </summary>
+    private void Recieve_Change(object sender, EventArgs e) {
+      int col, row;
+      spreadsheetPanel1.GetSelection(out col, out row);
+      string address = gridToAddress(col, row);
+      string content = contentBox.Text;
+      HashSet<string> cellsToUpdate = null;
+
+      try {
+        // set the contents and determine cells to recalculate
+        cellsToUpdate = (HashSet<string>)personalSpreadsheet.SetContentsOfCell(address, content);
+        foreach (string cell in cellsToUpdate) {
+          //get col, row
+          addressToGrid(cell, out col, out row);
+
+          object value = personalSpreadsheet.GetCellValue(cell);
+          if (value is FormulaError) {
+            value = ((FormulaError)value).Reason; // display the reason for error
+          }
+          //set value to display at cell
+          spreadsheetPanel1.SetValue(col, row, value.ToString());
+
+        }
+        addressBox.Text = address;
+        string cellVal;
+        addressToGrid(address, out col, out row);
+        spreadsheetPanel1.GetValue(col, row, out cellVal);
+        valueBox.Text = cellVal;
+
+        if (personalSpreadsheet.Changed && (!Regex.IsMatch(this.Text, @"(\(unsaved\))$")))
+          this.Text = this.Text + " (unsaved)";
+      }
+      catch (Exception err) //something went wrong while setting the contents
+      {
+        MessageBox.Show(err.Message, "Error Detected!", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+        contentBox.SelectAll();
+        contentBox.Focus();
+      }
+
+    }
+
+    /// <summary>
+    /// Sets a cell to "being edited" status
+    /// </summary>
+    private void Recieve_Istyping() {
+
+    }
+
+    /// <summary>
+    /// Removes "being edited" status from a cell
+    /// </summary>
+    private void Recieve_DoneTyping() {
+
+    }
+
+    /********************************************************************************************
+     * Local Actions
+     ********************************************************************************************/
 
     /// <summary>
     /// Given the address to a cell; it is converted and returns
@@ -134,22 +252,6 @@ namespace SS {
     }
 
     /// <summary>
-    /// If unsaved data is detected, this give the user a chance to cancel the closing procedure
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void SSForm_FormClosing(object sender, FormClosingEventArgs e) {
-      if (personalSpreadsheet.Changed || (fileName != null && !System.IO.File.Exists(fileName))) {
-        DialogResult askClose = MessageBox.Show("Spreadsheet contains unsaved data. Are you sure you want to close?",
-            "Unsaved Data Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-        if (askClose != DialogResult.Yes) {
-          e.Cancel = true;
-        }
-      }
-    }
-
-
-    /// <summary>
     /// Will populate the banner with content if it is present and highlight the text 
     /// so that it can be edited. If there is no content to be found then the focus is 
     /// redirected to the content box without displaying anything. 
@@ -190,58 +292,13 @@ namespace SS {
       MessageBox.Show("Below are instructions and features for the Spreadsheet Application: \n\n" +
           "-Use arrow keys: Right,Left,Up,Down to traverse the spreadsheet. \n" +
           "-Selecting a cell with your mouse will highlight the cell to be changed. \n" +
-          "-Additional features include: Exit,Save As, Menu Item Hotkeys, and a status update included in the application form name. \n\n " +
-          "-Save As will open a built in File Dialog to chose a file/location to save the file. \n" +
+          "-Additional features include: New Connection, Exit, Menu Item Hotkeys, and an application form name. \n\n " +
+          "-New Connection will allow user to connect to a server and open a spreadsheet.\n" +
           "-Exit will close out of all open windows and shut off the applicaiton.\n" +
           "-Menu Item Hotkeys can be found to the right of the action they corrispond too. \n" +
           "-To maximize and or revert the size of the screen use hotkey F11.",
           "Spreadsheet Information and Controls",
           MessageBoxButtons.OK, MessageBoxIcon.None);//Can choose what kind of symbol is displayed. 
-    }
-
-    /// <summary>
-    /// Basic functionality of setting a cell's contents
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void ContentButton_Click(object sender, EventArgs e) {
-      int col, row;
-      spreadsheetPanel1.GetSelection(out col, out row);
-      string address = gridToAddress(col, row);
-      string content = contentBox.Text;
-      HashSet<string> cellsToUpdate = null;
-
-      try {
-        // set the contents and determine cells to recalculate
-        cellsToUpdate = (HashSet<string>)personalSpreadsheet.SetContentsOfCell(address, content);
-        foreach (string cell in cellsToUpdate) {
-          //get col, row
-          addressToGrid(cell, out col, out row);
-
-          object value = personalSpreadsheet.GetCellValue(cell);
-          if (value is FormulaError) {
-            value = ((FormulaError)value).Reason; // display the reason for error
-          }
-          //set value to display at cell
-          spreadsheetPanel1.SetValue(col, row, value.ToString());
-
-        }
-        addressBox.Text = address;
-        string cellVal;
-        addressToGrid(address, out col, out row);
-        spreadsheetPanel1.GetValue(col, row, out cellVal);
-        valueBox.Text = cellVal;
-
-        if (personalSpreadsheet.Changed && (!Regex.IsMatch(this.Text, @"(\(unsaved\))$")))
-          this.Text = this.Text + " (unsaved)";
-      }
-      catch (Exception err) //something went wrong while setting the contents
-      {
-        MessageBox.Show(err.Message, "Error Detected!", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-        contentBox.SelectAll();
-        contentBox.Focus();
-      }
-
     }
 
     /// <summary>
@@ -327,13 +384,5 @@ namespace SS {
       contentBox.Focus();
     }
 
-    /// <summary>
-    /// Sends the "Undo" command to the server
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void undoToolStripMenuItem_Click(object sender, EventArgs e) {
-
-    }
   }
 }
