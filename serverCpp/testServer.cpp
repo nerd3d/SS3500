@@ -10,6 +10,10 @@
 
 http://stackoverflow.com/questions/10812920/tcp-server-with-multiple-clients-sending-message-back-to-all-connected-clients
 
+http://www.cplusplus.com/forum/unices/116977/
+
+http://stackoverflow.com/questions/29729561/asynchronous-c-client-for-a-multiclient-c-server
+
 
 if you need to compile this use this command:
 g++ testServer.cpp -lpthread
@@ -241,6 +245,8 @@ void *task1(void* dumbyPt)
   */
   while(1)
     {
+      // http://stackoverflow.com/questions/29729561/asynchronous-c-client-for-a-multiclient-c-server
+      //recv is blocking most likely change to select
       recv(connectionFd, test, 300, 0);
 
       // getline(test, test);
