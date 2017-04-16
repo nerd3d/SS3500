@@ -11,8 +11,11 @@
 http://stackoverflow.com/questions/10812920/tcp-server-with-multiple-clients-sending-message-back-to-all-connected-clients
 
 
-
+if you need to compile this use this command:
 g++ testServer.cpp -lpthread
+
+
+
  */
 
 #include <iostream>
@@ -29,6 +32,7 @@ using namespace std;
 
 // http://www.cplusplus.com/forum/unices/116977/
 void *task1(void *);
+//int sendMessage(int, string);
 
 static int connectionFd;
 int main()
@@ -208,24 +212,50 @@ int main()
 void *task1(void* dumbyPt)
 {
   cout << "Thread #" << pthread_self() << endl;
-  string message;
+  // string message;
   char test[300];
   bzero(test, 301);
   
   strcpy(test, "=> Server connected...\n\n");
   send(connectionFd, test, 300, 0);
 
+
+  /*
+    int send(
+        _In_       SOCKET s,
+        _In_ const char   *buf,
+        _In_       int    len,
+        _In_       int    flags
+    );
+    Parameters
+
+    s [in]
+      A descriptor identifying a connected socket.
+    buf [in]
+      A pointer to a buffer containing the data to be transmitted.
+    len [in]
+      The length, in bytes, of the data in buffer pointed to by the buf parameter.
+    flags [in]
+      A set of flags that specify the way in which the call is made. This parameter 
+      is constructed by using the bitwise OR operator with any of the following values.
+  */
   while(1)
     {
       recv(connectionFd, test, 300, 0);
 
-      getline(test, message);
-      cout << "client #" << pthread_self() << " sent " << message << "\n";
+      // getline(test, test);
+      cout << "client #" << pthread_self() << " sent " << test << "\n";
 
-      cout << "sending " << message << " to the client\n" << endl;
-      send(connectionFd, message, 300, 0);
+      cout << "sending " << test << " to the client\n" << endl;
+      send(connectionFd, test, 300, 0);
     }
   
   cout << "closing thread # " << pthread_self() << endl;
   close(connectionFd);
 }
+/*
+int sendMessage(int fd, char[] buf, int bufferSize, int flags)
+{
+  send(fd,
+}
+*/
