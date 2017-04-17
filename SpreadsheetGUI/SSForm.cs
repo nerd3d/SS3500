@@ -16,7 +16,7 @@ namespace SS {
     // Spreadsheet Data associated with current Form
     private Spreadsheet personalSpreadsheet;
     private NetworkWarden warden;
-
+    private NetworkWarden listenWarden;
 
     /// <summary>
     /// Constructor used for Multi-user Spreadsheet
@@ -26,13 +26,16 @@ namespace SS {
 
       personalSpreadsheet = new Spreadsheet(validAddress, s => s.ToUpper(), "PS6");
       this.Text = filename;
-      warden = ward;
       addressBox.Text = "A1";
+      warden = ward;
+      warden.callNext = Send_Message;
 
       // Set warden callback function for server messages
-      warden.callNext = Recieve_Message;
+      listenWarden = new NetworkWarden(warden.socket, warden.ID);
+      listenWarden.callNext = Recieve_Message;
 
       // Send the filename to the server
+      Networking.getData(listenWarden);
       Networking.Send(warden, "Connect\t" + filename + "\t\n");
 
     }
@@ -53,7 +56,7 @@ namespace SS {
       string address = gridToAddress(col, row);
       string content = contentBox.Text;
 
-      Networking.Send(warden, "Edit\t"+address+"\t"+content+"\t\n");
+      Networking.Send(warden, "Edit\t" + address + "\t" + content + "\t\n");
 
     }
 
@@ -61,7 +64,7 @@ namespace SS {
     /// Sends the "Undo" command to the server
     /// </summary>
     private void undoToolStripMenuItem_Click(object sender, EventArgs e) {
-      
+
     }
 
     /// <summary>
@@ -83,7 +86,15 @@ namespace SS {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void SSForm_FormClosing(object sender, FormClosingEventArgs e) {
-      
+
+    }
+
+    /// <summary>
+    /// Use to send messages to the server
+    /// </summary>
+    /// <param name="ward"></param>
+    private void Send_Message(NetworkWarden ward) {
+
     }
 
     /********************************************************************************************
@@ -94,8 +105,14 @@ namespace SS {
     /// recieve hub - decodes message and activate proper command
     /// </summary>
     public void Recieve_Message(NetworkWarden ward) {
+      string msg = ward.buffString;
+
+      string[] parsedMsg = msg.Split('\t');
+
+      if(parsedMsg[0] == "Edit")
+        this.Invoke(new MethodInvoker(() => Recieve_Change(parsedMsg)));      
       
-      System.Diagnostics.Debug.WriteLine("Message recieved from Server: ");
+      Networking.getData(ward);
     }
 
     /// <summary>
@@ -108,11 +125,20 @@ namespace SS {
     /// <summary>
     /// Recieves a Change from the server and applys it to the spreadsheet
     /// </summary>
-    private void Recieve_Change(object sender, EventArgs e) {
+    private void Recieve_Change(string[] message) {
       int col, row;
+      /*
       spreadsheetPanel1.GetSelection(out col, out row);
       string address = gridToAddress(col, row);
       string content = contentBox.Text;
+      */
+      string address = message[1];
+      string content;
+      if (message.Length > 2)
+        content = message[2];
+      else
+        content = "";
+
       HashSet<string> cellsToUpdate = null;
 
       try {

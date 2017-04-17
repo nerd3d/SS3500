@@ -46,8 +46,9 @@ namespace ChatClient
     {
         public Socket socket;
         public int ID; //assigned by server for server socket connection tracking
-        public byte[] buffer = new byte[1024];
-        public StringBuilder message = new StringBuilder();
+        public byte[] buffer = new byte[1024]; // byte string, used for recieving
+        public string buffString = null; // string version of buffer, for message extraction
+        public StringBuilder message = new StringBuilder(); // used for sending
         public delegate void callBack(NetworkWarden warden);//call back functions must have a NetworkWarden parameter
         public callBack callNext;//holds a method to be executed once reply arrives
         /// <summary>
@@ -157,21 +158,21 @@ namespace ChatClient
         {
             try
             {
-                NetworkWarden warden = (NetworkWarden)ARSTATE.AsyncState;
-                int numBytes = warden.socket.EndReceive(ARSTATE);
-
-                if (numBytes > 0)
-                {
-                    string newMessage = Encoding.UTF8.GetString(warden.buffer, 0, numBytes);
-                    newMessage = newMessage.Trim();
-                    newMessage = newMessage.TrimEnd();
-                    //string[] lines = ss.sb.ToString().Split(new string[] {"\n"}, StringSPlitOptions.None);
-                    //warden.message.Clear();
-                    //warden.message.Append(newMessage);
-                    Console.WriteLine("Server said: " + newMessage);
-                }
-
-                warden.callNext(warden);
+              NetworkWarden warden = (NetworkWarden)ARSTATE.AsyncState;
+              int numBytes = warden.socket.EndReceive(ARSTATE);
+    
+              if (numBytes > 0) {
+                string newMessage = Encoding.UTF8.GetString(warden.buffer, 0, numBytes);
+                newMessage = newMessage.Trim();
+                newMessage = newMessage.TrimEnd();
+                //string[] lines = ss.sb.ToString().Split(new string[] {"\n"}, StringSPlitOptions.None);
+                //warden.message.Clear();
+                //warden.message.Append(newMessage);
+                Console.WriteLine("Server said: " + newMessage);
+                warden.buffString = newMessage;
+              }
+    
+              warden.callNext(warden);
             }
             catch (Exception e)
             {
