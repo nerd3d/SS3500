@@ -89,3 +89,5 @@ C:\Users\Aaron Benson\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SpreadsheetGU
 C:\Users\Aaron Benson\Source\Repos\SS3500\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.pdb
 C:\Users\Chris\Source\Repos\SS3500\SpreadsheetGUI\bin\Debug\ChatClient.exe
 C:\Users\Chris\Source\Repos\SS3500\SpreadsheetGUI\bin\Debug\ChatClient.pdb
+C:\Users\nerd3\Source\Repos\SS3500\SpreadsheetGUI\bin\Debug\ChatClient.exe
+C:\Users\nerd3\Source\Repos\SS3500\SpreadsheetGUI\bin\Debug\ChatClient.pdb
