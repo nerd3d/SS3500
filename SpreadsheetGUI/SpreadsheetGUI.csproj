@@ -106,6 +106,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\clientNetworkController\clientNetworkController\ChatClient\ChatClient.csproj">
+      <Project>{19c2d9f1-dd62-4161-9360-e1a674600ca9}</Project>
+      <Name>ChatClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Resources\Resources.csproj">
       <Project>{71523b43-13a7-4b4c-8b19-338dc3afe1b2}</Project>
       <Name>Resources</Name>

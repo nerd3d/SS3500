@@ -27,8 +27,8 @@ namespace ChatClient
         static NetworkWarden listenWarden;
         static void Main(string[] args)
         {
-            //string hostname = "lab2-24.eng.utah.edu";
             string hostname = "lab1-7.eng.utah.edu";
+            //string hostname = "lab1-7.eng.utah.edu";
             Networking.ConnectToServer(sendName, hostname);
             while (true) { };
         }
