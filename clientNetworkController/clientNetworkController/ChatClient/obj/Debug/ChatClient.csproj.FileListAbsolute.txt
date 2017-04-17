@@ -1,0 +1,6 @@
+C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\bin\Debug\ChatClient.exe.config
+C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\bin\Debug\ChatClient.exe
+C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\bin\Debug\ChatClient.pdb
+C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.csprojResolveAssemblyReference.cache
+C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.exe
+C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.pdb
