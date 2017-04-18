@@ -49,24 +49,18 @@ private:
           {
 	    cout << "read: " << data_ << endl;
 
-	    
+	    // parse the string
 	    vector<string> words;
 	    string word;
-	    //string checked;
 	    for(int i = 0; i < max_length; i++)
 	      {
 		int j = data_[i];
-
-		//	checked += data_[i];
-		//checked += data_[i+1];
-
-		if(j == 9)//(checked == "  ")
+		if(j == 9)
 		  {
 		    words.push_back(word);
 		    word = "";
 		    i++;
 
-		    //  checked = "";
 		  }
 		else if(j == 10)
 		  {
@@ -78,6 +72,12 @@ private:
 		
 	      }
 
+
+
+
+
+
+
 	    if(!words[0].compare("Connect"))
 	      {
 		bzero(data_, 301);
@@ -85,6 +85,48 @@ private:
 		strcpy(data_, "I want to take you to a gay bar \n");
 		do_write(39);
 	      }
+	    //	    else if(words[0].compare("Edit"))
+	    {
+	      
+		// Edit\t cellName\t cellContents\t\n
+		// update the spreadsheet
+		// save the updated spreadsheet
+		//	int success;
+		//	success = save(string[1],string[2]);
+
+		//	if(success)
+		  {
+		    // store edit in stack incase someone hits undo(maybe store previous data?)
+		    // update clients
+		  }
+	    }
+	    //	    else if(words[0].compare("Undo"))
+	    {
+	      
+		// Undo\t\n
+		// get the top of the stack
+
+		//	success = save(cellname, oldvalue);
+		//	if(success)
+		  {
+		    // pop the stack
+		    // update clients
+		  }
+
+	    }
+	    //	    else if(words[0].compare("IsTyping"))
+	    {
+	      
+		// IsTyping\t clientID\t cellName\t\n
+		// propogate exact message to all clients
+	    }
+	    //	    else if(words[0].compare("DoneTyping"))
+	    {
+
+
+		// DoneTyping\t clientID\t cellName\t\n
+		// propogate exact message to all clients
+	    }
 	    else
 	      do_write(length);
 	    /*
