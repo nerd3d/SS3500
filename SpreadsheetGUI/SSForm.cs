@@ -49,35 +49,32 @@ namespace SS {
     /// Sends the "Edit" command to the server
     /// </summary>
     private void ContentButton_Click(object sender, EventArgs e) {
-      //Recieve_Change(sender, e); // temporary to keep spreadsheet functional
-
       int col, row;
       spreadsheetPanel1.GetSelection(out col, out row);
       string address = gridToAddress(col, row);
       string content = contentBox.Text;
 
       Networking.Send(warden, "Edit\t" + address + "\t" + content + "\t\n");
-
     }
 
     /// <summary>
     /// Sends the "Undo" command to the server
     /// </summary>
     private void undoToolStripMenuItem_Click(object sender, EventArgs e) {
-
+      Networking.Send(warden, "Undo\t\n");
     }
 
     /// <summary>
     /// Send the "IsTyping" message to the server
     /// </summary>
     private void Send_IsTyping() {
-
+      Networking.Send(warden, "IsTyping\t" + warden.ID + "\t cellName\t\n");
     }
     /// <summary>
     /// Send the "DoneTyping" message to the server
     /// </summary>
     private void Send_DoneTyping() {
-
+      Networking.Send(warden, "DoneTyping\t" + warden.ID + "\t cellName\t\n");
     }
 
     /// <summary>
@@ -109,16 +106,30 @@ namespace SS {
 
       string[] parsedMsg = msg.Split('\t');
 
-      if(parsedMsg[0] == "Edit")
-        this.Invoke(new MethodInvoker(() => Recieve_Change(parsedMsg)));      
-      
+      switch (parsedMsg[0]) {
+        case "Startup":
+          this.Invoke(new MethodInvoker(() => Recieve_Startup(parsedMsg)));
+          break;
+        case "Edit": // should be "Change"
+          this.Invoke(new MethodInvoker(() => Recieve_Change(parsedMsg)));
+          break;
+        case "IsTyping":
+          this.Invoke(new MethodInvoker(() => Recieve_IsTyping(parsedMsg)));
+          break;
+        case "DoneTyping":
+          this.Invoke(new MethodInvoker(() => Recieve_DoneTyping(parsedMsg)));
+          break;
+        default:
+          // error in recieved message: gracefully close everything
+          break;
+      }
       Networking.getData(ward);
     }
 
     /// <summary>
     /// Pupulates an empty spreadsheet with given data
     /// </summary>
-    private void Recieve_Startup() {
+    private void Recieve_Startup(string[] message) {
 
     }
 
@@ -177,14 +188,14 @@ namespace SS {
     /// <summary>
     /// Sets a cell to "being edited" status
     /// </summary>
-    private void Recieve_Istyping() {
+    private void Recieve_IsTyping(string[] message) {
 
     }
 
     /// <summary>
     /// Removes "being edited" status from a cell
     /// </summary>
-    private void Recieve_DoneTyping() {
+    private void Recieve_DoneTyping(string[] message) {
 
     }
 
