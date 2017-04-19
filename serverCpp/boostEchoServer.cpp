@@ -84,7 +84,7 @@ private:
 		
 		strcpy(data_, "I want to take you to a gay bar \n");
 		do_write(39);
-	      }
+	      }/*
 	    //	    else if(words[0].compare("Edit"))
 	    {
 	      
@@ -126,7 +126,7 @@ private:
 
 		// DoneTyping\t clientID\t cellName\t\n
 		// propogate exact message to all clients
-	    }
+	    }*/
 	    else
 	      do_write(length);
 	    /*
