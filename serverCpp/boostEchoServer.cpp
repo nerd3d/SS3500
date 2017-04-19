@@ -17,6 +17,7 @@
 #include <string.h>
 #include <map>
 #include <stack>
+#include <boost/lexical_cast.hpp>
 
 using boost::asio::ip::tcp;
 using namespace std;
@@ -48,7 +49,7 @@ typedef struct{
 map<string, spreadSheet_pak> Spreadsheets;
 
 // contains a means for a socket to find it's warden
-map<tcp::socket, Warden> wardenLookup;
+map<tcp::socket, string> wardenLookup;
 
 class session
   : public std::enable_shared_from_this<session>
@@ -61,6 +62,7 @@ public:
 
   void start()
   {
+    //  wardenLookup[socket_] = "clientID";
     do_read();
   }
 
@@ -251,7 +253,6 @@ public:
   {
     do_accept();
   }
-
 private:
   void do_accept()
   {
@@ -260,6 +261,11 @@ private:
         {
           if (!ec)
           {
+	    // cout << socket_ << endl;
+	    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+	    //   string hostName= host_name();
+	    cout << port << endl;
+	    // cout << hostName << endl;
             std::make_shared<session>(std::move(socket_))->start();
           }
 
