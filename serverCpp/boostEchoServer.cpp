@@ -15,14 +15,40 @@
 #include <boost/asio.hpp>
 #include <vector>
 #include <string.h>
-#include <unordered_map>
+#include <map>
+#include <stack>
 
 using boost::asio::ip::tcp;
 using namespace std;
 
-static unordered_map<int, tcp::socket> mymap;
-static int clientID = 0;
+static int clientID = 0; // next available user ID
 
+// contains all info related to a single user connection (socket)
+typedef struct{
+  int ID; // client ID (unique resuired)
+  tcp::socket socket; // socket connection for user
+  string spreadsheet; // spreadsheet user is editing (required)
+  string inCell; // cell user is currently editing (null == none)
+}Warden;
+
+// contains all info to impliment an Undo
+typedef struct{
+  string cellName;
+  string oldContent;
+}undo_pak;
+
+// contains all data related to a single spreadsheet
+typedef struct{
+  map<int, Warden> Users; // dictionary of users connected to this spreadsheet
+  map<string, string> CellContents; // key = CellName; value = CellContent
+  stack<undo_pak> Undos; // stack of undo-pak's
+}spreadSheet_pak;
+
+// contains all currently open spreadsheets.
+map<string, spreadSheet_pak> Spreadsheets;
+
+// contains a means for a socket to find it's warden
+map<tcp::socket, Warden> wardenLookup;
 
 class session
   : public std::enable_shared_from_this<session>
@@ -86,7 +112,7 @@ private:
 		do_write(39);
 	      }
 	    //	    else if(words[0].compare("Edit"))
-	    {
+	    /* {
 	      
 		// Edit\t cellName\t cellContents\t\n
 		// update the spreadsheet
@@ -126,7 +152,7 @@ private:
 
 		// DoneTyping\t clientID\t cellName\t\n
 		// propogate exact message to all clients
-	    }
+	    }*/
 	    else
 	      do_write(length);
 	    /*
@@ -234,7 +260,6 @@ private:
         {
           if (!ec)
           {
-	    //  mymap.insert( std::pair<int, tcp::socket>(clientID, socket_));
             std::make_shared<session>(std::move(socket_))->start();
           }
 
