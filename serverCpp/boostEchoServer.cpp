@@ -19,8 +19,6 @@
 #include <stack>
 #include <boost/lexical_cast.hpp>
 
-void AddUser(string sheetName, Warden* user);
-
 using boost::asio::ip::tcp;
 using namespace std;
 
@@ -42,7 +40,7 @@ typedef struct{
 
 // contains all data related to a single spreadsheet
 typedef struct{
-  map<int, Warden>* Users; // dictionary of users connected to this spreadsheet
+  map<int, Warden*>* Users; // dictionary of users connected to this spreadsheet
   map<string, string>* CellContents; // key = CellName; value = CellContent
   stack<undo_pak>* Undos; // stack of undo-pak's
 }Sheet_pak;
@@ -52,6 +50,8 @@ map<string, Sheet_pak*> Spreadsheets;
 
 // contains a means for a socket to find it's warden
 map<string, Warden*> wardenLookup;
+
+void AddUser(Warden* user);
 
 class session
   : public std::enable_shared_from_this<session>
@@ -77,7 +77,7 @@ public:
 
     wardenLookup[port] = newClient; 
 
-    //  wardenLookup[socket_] = "clientID";
+
     do_read();
   }
 
@@ -124,13 +124,12 @@ private:
 		strcpy(sheetName, "sample.sprd");
 
 		// set user's spreadsheet field to new string
-		wardenLookup[port]->spreadsheet = sheetName;
+		Warden* user = wardenLookup[port];
+		user->spreadsheet = sheetName;
 
 		// add user to the spreadsheet's users list
-		AddUser(sheetName, wardenLookup[port]);
-
-		cout << wardenLookup[port]->spreadsheet << endl;
-
+		AddUser(user);
+		
 		bzero(data_, 301);
 		
 		strcpy(data_, "I want to take you to a gay bar \n");
@@ -333,16 +332,27 @@ int updateClients()
 
 }
 
-void AddUser(string sheetName, Warden* user){
-  // check if spreadsheet already exists in dictionary
-  map< string, Sheet_pak>::iterator sheet;
-  sheet = Spreadsheets.find(sheetName);
-  if (sheet != Spreadsheets.end()){
-    // if so -> add user to the users list
-    (Spreadsheets[sheetName]->Users)[user->ID] = user;
-  } else{
-    // if not -> create a new one and add it
-    
-  }
+void AddUser(Warden* user){
+  string sheetName = user->spreadsheet;
 
+  // check if spreadsheet already exists in dictionary
+  map< string, Sheet_pak*>::iterator sheetIT;
+  sheetIT = Spreadsheets.find(sheetName);
+
+  if (sheetIT != Spreadsheets.end()){
+    // if so -> add user to the users list
+    //    (Spreadsheets[sheetName]->Users)[user->ID] = user;
+  } else{
+    // if not -> create a new (empty) sheet pak and add the user
+    Sheet_pak* newSheet = (Sheet_pak*)malloc(sizeof(Sheet_pak));
+    map<int, Warden*> newUsers; // needs to be in heap
+    map<string, string> newCells; // needs to be in the heap
+    stack<undo_pak> newUndos; // needs to be in the heap
+    newUsers[user->ID] = user;
+
+    newSheet->Users = &newUsers;
+    newSheet->CellContents = &newCells;
+    newSheet->Undos = &newUndos;    
+
+  }
 }
