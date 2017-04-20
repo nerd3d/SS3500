@@ -27,29 +27,31 @@ static int clientID = 0; // next available user ID
 // contains all info related to a single user connection (socket)
 typedef struct{
   int ID; // client ID (unique resuired)
-  tcp::socket socket; // socket connection for user
-  string spreadsheet; // spreadsheet user is editing (required)
-  string inCell; // cell user is currently editing (null == none)
+  tcp::socket* socket; // socket connection for user
+  char* spreadsheet; // spreadsheet user is editing (required)
+  char* inCell; // cell user is currently editing (null == none)
 }Warden;
 
 // contains all info to impliment an Undo
 typedef struct{
-  string cellName;
-  string oldContent;
+  char* cellName;
+  char* oldContent;
 }undo_pak;
 
 // contains all data related to a single spreadsheet
 typedef struct{
-  map<int, Warden> Users; // dictionary of users connected to this spreadsheet
-  map<string, string> CellContents; // key = CellName; value = CellContent
-  stack<undo_pak> Undos; // stack of undo-pak's
-}spreadSheet_pak;
+  map<int, Warden*>* Users; // dictionary of users connected to this spreadsheet
+  map<string, string>* CellContents; // key = CellName; value = CellContent
+  stack<undo_pak>* Undos; // stack of undo-pak's
+}Sheet_pak;
 
 // contains all currently open spreadsheets.
-map<string, spreadSheet_pak> Spreadsheets;
+map<string, Sheet_pak*> Spreadsheets;
 
 // contains a means for a socket to find it's warden
-map<tcp::socket, string> wardenLookup;
+map<string, Warden*> wardenLookup;
+
+void AddUser(Warden* user);
 
 class session
   : public std::enable_shared_from_this<session>
@@ -62,7 +64,20 @@ public:
 
   void start()
   {
-    //  wardenLookup[socket_] = "clientID";
+
+    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+    cout << port << " " << &socket_ << endl;
+    
+    // create a new warden; remember to clean this up
+    Warden* newClient = (Warden*)malloc(sizeof(Warden));
+    newClient->ID = clientID++; // need to lock this
+    newClient->socket = &socket_;
+    newClient->spreadsheet = NULL;
+    newClient->inCell = NULL;
+
+    wardenLookup[port] = newClient; 
+
+
     do_read();
   }
 
@@ -75,7 +90,7 @@ private:
         {
           if (!ec)
           {
-	    cout << "read: " << data_ << endl;
+	    cout << "read: " << data_ << endl; // debug message (recieved input)
 
 	    // parse the string
 	    vector<string> words;
@@ -100,14 +115,21 @@ private:
 		
 	      }
 
-
-
-
-
-
-
 	    if(!words[0].compare("Connect"))
 	      {
+		string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+
+		// create a malloc'd string of spreadsheet name
+		char* sheetName = (char*)malloc(12);
+		strcpy(sheetName, "sample.sprd");
+
+		// set user's spreadsheet field to new string
+		Warden* user = wardenLookup[port];
+		user->spreadsheet = sheetName;
+
+		// add user to the spreadsheet's users list
+		AddUser(user);
+		
 		bzero(data_, 301);
 		
 		strcpy(data_, "I want to take you to a gay bar \n");
@@ -261,11 +283,9 @@ private:
         {
           if (!ec)
           {
-	    // cout << socket_ << endl;
 	    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
-	    //   string hostName= host_name();
-	    cout << port << endl;
-	    // cout << hostName << endl;
+	    cout << port << " " << &socket_ << endl;
+	    
             std::make_shared<session>(std::move(socket_))->start();
           }
 
@@ -310,4 +330,29 @@ int save(string cellName, string cellContents)
 int updateClients()
 {
 
+}
+
+void AddUser(Warden* user){
+  string sheetName = user->spreadsheet;
+
+  // check if spreadsheet already exists in dictionary
+  map< string, Sheet_pak*>::iterator sheetIT;
+  sheetIT = Spreadsheets.find(sheetName);
+
+  if (sheetIT != Spreadsheets.end()){
+    // if so -> add user to the users list
+    //    (Spreadsheets[sheetName]->Users)[user->ID] = user;
+  } else{
+    // if not -> create a new (empty) sheet pak and add the user
+    Sheet_pak* newSheet = (Sheet_pak*)malloc(sizeof(Sheet_pak));
+    map<int, Warden*> newUsers; // needs to be in heap
+    map<string, string> newCells; // needs to be in the heap
+    stack<undo_pak> newUndos; // needs to be in the heap
+    newUsers[user->ID] = user;
+
+    newSheet->Users = &newUsers;
+    newSheet->CellContents = &newCells;
+    newSheet->Undos = &newUndos;    
+
+  }
 }
