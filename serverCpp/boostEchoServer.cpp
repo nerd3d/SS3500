@@ -94,7 +94,6 @@ private:
           if (!ec)
           {
 	    cout << "read: " << data_ << endl; // debug message (recieved input)
-
 	    // parse the string
 	    vector<string> words;
 	    string word;
@@ -105,8 +104,6 @@ private:
 		  {
 		    words.push_back(word);
 		    word = "";
-		    i++;
-
 		  }
 		else if(j == 10)
 		  {
@@ -117,6 +114,8 @@ private:
 		  word+=data_[i];
 		
 	      }
+	    cout<<"finished parse"<<endl;
+	    cout << "words: " << words[0]<<endl;//<<words[1] <<words[2]<<endl;
 	    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 	    Warden* user = wardenLookup[port];
 	    if(!words[0].compare("Connect"))
@@ -145,8 +144,9 @@ private:
 		strcpy(data_, "I want to take you to a gay bar \n");
 		do_write(39);
 	      }
-	      else if(words[0].compare("Edit"))
+	      else if(!words[0].compare("Edit"))
 	      {
+		cout << "Got to Edit.." << endl;
 		char* sheetName = user->spreadsheet;
 		// Edit\t cellName\t cellContents\t\n
 		// update the spreadsheet
@@ -163,18 +163,21 @@ private:
 		if (it == (Spreadsheets[sheetName]->CellContents).end())
 		  {
 		    newUndo->oldContent = new char[1];
-		    newUndo->oldContent = 0;
+		    *(newUndo->oldContent) = 0;
 		  }
 		else
 		  {
 		    char* temp55 = new char[(Spreadsheets[sheetName]->CellContents)[word1].length()+1];
 		    strcpy(temp55, (Spreadsheets[sheetName]->CellContents)[word1].c_str());
+		    cout <<"temp55:" << temp55 <<endl;
 		    newUndo->oldContent = temp55;//(Spreadsheets[sheetName]->CellContents)[word1];
 		  }
 		
 		// store undo (previous data in that cell)
 	        (Spreadsheets[sheetName]->Undos).push(*newUndo );
-		Spreadsheets[sheetName]->CellContents[words[1]] = words[2];
+		char* word2 = new char[words[2].length()+1];
+		strcpy(word2, words[2].c_str());
+		Spreadsheets[sheetName]->CellContents[words[1]] = word2;
 		// save the updated spreadsheet
 		int success;
 		success = save(sheetName, &Spreadsheets[sheetName]->CellContents);
@@ -186,47 +189,62 @@ private:
 		  {
 		    data_[i] = message[i];
 		  }
+
+		undo_pak* up = &(Spreadsheets[sheetName]->Undos.top());
+		  //new char* = new char[strlen];
+		  
+		  cout << "Checking undos.top()" << endl;
+		  cout << up->cellName <<endl;
+		  cout << up->oldContent <<endl;
+
+
 		do_write(message.length());
-		cout<<message<<endl;
+		cout<<"SentBack: "<< message <<endl;
 		// update clients
 		//}
 	      }
-	      else if(words[0].compare("Undo"))
+	      else if(!words[0].compare("Undo"))
 	    {
-	      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+		cout << "Got to Undo.." << endl;
+		//string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 
-	      Warden* user = wardenLookup[port];
+	      //Warden* user = wardenLookup[port];
 	      Sheet_pak* sp = Spreadsheets[user->spreadsheet];
-
+	      
 	      if(sp->Undos.size()>0)
 		{
-		undo_pak up = sp->Undos.top();
-		sp->Undos.pop();
-		sp->CellContents[up.cellName] = up.oldContent;
-		string message = string("Change\t") + up.cellName + "\t" +
-		  up.oldContent + "\t\n";
-		for(int i = 0; i<message.length();++i){
-		  data_[i] = message[i];
+
+		  undo_pak* up = &(sp->Undos.top());
+		  //new char* = new char[strlen];
+		  
+		  cout << up->cellName <<endl;
+		  cout << up->oldContent <<endl;
+		  (sp->CellContents)[up->cellName] = up->oldContent;
+		  string message = string("Change\t") + sp->Undos.top().cellName + "\t" +
+		    sp->Undos.top().oldContent + "\t\n";
+		  sp->Undos.pop();
+		  for(int i = 0; i<message.length();++i){
+		    data_[i] = message[i];
+		  }
+		  do_write(message.length());
 		}
-		do_write(message.length());
-		}
-		}
-	        else if(words[0].compare("IsTyping"))
-		  {
-		    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
-		    Warden* user = wardenLookup[port];
-		    string message = string("IsTyping\t") + words[1] + "\t" +
-		      words[2] + "\t\n";
-		    for(int i = 0; i<message.length();++i){
-		      data_[i] = message[i];
-		    }
-		    do_write(message.length());
-		    // IsTyping\t clientID\t cellName\t\n
+	    }
+	      else if(!words[0].compare("IsTyping"))
+		{
+		  string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+		  Warden* user = wardenLookup[port];
+		  string message = string("IsTyping\t") + words[1] + "\t" +
+		    words[2] + "\t\n";
+		  for(int i = 0; i<message.length();++i){
+		    data_[i] = message[i];
+		  }
+		  do_write(message.length());
+		  // IsTyping\t clientID\t cellName\t\n
 		    // propogate exact message to all clients
 		  }
 
 	    //else if(words[0].compare("DoneTyping"))
-		else if(words[0].compare("DoneTyping"))
+		else if(!words[0].compare("DoneTyping"))
 		  {
 		    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 		    Warden* user = wardenLookup[port];
@@ -251,6 +269,61 @@ private:
 		do_write(39);
 	    
 	    */
+	    
+	    /*
+	    int success = 0;
+	    switch(words[0])
+	      {
+	      case"Edit":
+		// Edit\t cellName\t cellContents\t\n
+		// update the spreadsheet
+		// save the updated spreadsheet
+		//	int success;
+		//	success = save(string[1],string[2]);
+
+		//	if(success)
+		  {
+		    // store edit in stack incase someone hits undo(maybe store previous data?)
+		    // update clients
+		  }
+
+		break;
+	      case "Undo":
+		// Undo\t\n
+		// get the top of the stack
+
+		//	success = save(cellname, oldvalue);
+		//	if(success)
+		  {
+		    // pop the stack
+		    // update clients
+		  }
+		break;
+	      case "Connect":
+		// Connect\t spreadsheetName\t\n
+		// send this client the spread sheet
+		// if not  created then create it
+		// add the client to that spreadsheet to that map
+
+		bzero(data_, 301);
+		
+		strcpy(data_, "=> I want to take you to a gay bar\n");
+		do_write(length);
+		break;
+	      case "IsTyping":
+		// IsTyping\t clientID\t cellName\t\n
+		// propogate exact message to all clients 
+		break;
+	      case "DoneTyping":
+		// DoneTyping\t clientID\t cellName\t\n
+		// propogate exact message to all clients
+		break;
+
+
+	      }
+
+	    */
+	    // do_write(length);
           }
         });
   }
