@@ -15,6 +15,7 @@
 #include <boost/asio.hpp>
 #include <vector>
 #include <string.h>
+#include <fstream>
 #include <map>
 #include <stack>
 #include <boost/lexical_cast.hpp>
@@ -52,6 +53,7 @@ map<string, Sheet_pak*> Spreadsheets;
 map<string, Warden*> wardenLookup;
 
 void AddUser(Warden* user);
+int save(string spreadsheetName,  map<string, string>* CellContents);
 
 class session
   : public std::enable_shared_from_this<session>
@@ -82,7 +84,7 @@ public:
     do_read();
   }
 
-private:
+private: 
   void do_read()
   {
     auto self(shared_from_this());
@@ -103,6 +105,7 @@ private:
 		  {
 		    words.push_back(word);
 		    word = "";
+		    i++;
 
 		  }
 		else if(j == 10)
@@ -114,17 +117,17 @@ private:
 		  word+=data_[i];
 		
 	      }
-
+	    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+	    Warden* user = wardenLookup[port];
 	    if(!words[0].compare("Connect"))
 	      {
-		string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+		
 
 		// create a malloc'd string of spreadsheet name
 		char* sheetName = new char[words[1].length()+1];
 		strcpy(sheetName, words[1].c_str());
 		
-		// set user's spreadsheet field to new string
-		Warden* user = wardenLookup[port];
+		// set user's spreadsheet field to new string		
 		user->spreadsheet = sheetName;
 
 		// add user to the spreadsheet's users list
@@ -139,49 +142,105 @@ private:
 		// 
 		// send the data to the user
 		//SendMessage(user, "data goes here");
-	      }/*
-	    //	    else if(words[0].compare("Edit"))
-	    /* {
-	      
+		strcpy(data_, "I want to take you to a gay bar \n");
+		do_write(39);
+	      }
+	      else if(words[0].compare("Edit"))
+	      {
+		char* sheetName = user->spreadsheet;
 		// Edit\t cellName\t cellContents\t\n
 		// update the spreadsheet
+		//prep undo
+		undo_pak* newUndo = new undo_pak;
+		char* word1 = new char[words[1].length()+1];
+		strcpy(word1, words[1].c_str());
+		newUndo->cellName=word1;
+
+
+		std::map<string,string>::iterator it;
+
+		it = (Spreadsheets[sheetName]->CellContents).find(word1);
+		if (it == (Spreadsheets[sheetName]->CellContents).end())
+		  {
+		    newUndo->oldContent = new char[1];
+		    newUndo->oldContent = 0;
+		  }
+		else
+		  {
+		    char* temp55 = new char[(Spreadsheets[sheetName]->CellContents)[word1].length()+1];
+		    strcpy(temp55, (Spreadsheets[sheetName]->CellContents)[word1].c_str());
+		    newUndo->oldContent = temp55;//(Spreadsheets[sheetName]->CellContents)[word1];
+		  }
+		
+		// store undo (previous data in that cell)
+	        (Spreadsheets[sheetName]->Undos).push(*newUndo );
+		Spreadsheets[sheetName]->CellContents[words[1]] = words[2];
 		// save the updated spreadsheet
-		//	int success;
-		//	success = save(string[1],string[2]);
+		int success;
+		success = save(sheetName, &Spreadsheets[sheetName]->CellContents);
 
-		//	if(success)
+		//if(success)
+		//{		  
+		string message = string("Change\t") + words[1] + "\t" + words[2] + "\t\n";
+		for(int i = 0; i<message.length();++i)
 		  {
-		    // store edit in stack incase someone hits undo(maybe store previous data?)
-		    // update clients
+		    data_[i] = message[i];
 		  }
-	    }
-	    //	    else if(words[0].compare("Undo"))
+		do_write(message.length());
+		cout<<message<<endl;
+		// update clients
+		//}
+	      }
+	      else if(words[0].compare("Undo"))
 	    {
-	      
-		// Undo\t\n
-		// get the top of the stack
+	      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 
-		//	success = save(cellname, oldvalue);
-		//	if(success)
+	      Warden* user = wardenLookup[port];
+	      Sheet_pak* sp = Spreadsheets[user->spreadsheet];
+
+	      if(sp->Undos.size()>0)
+		{
+		undo_pak up = sp->Undos.top();
+		sp->Undos.pop();
+		sp->CellContents[up.cellName] = up.oldContent;
+		string message = string("Change\t") + up.cellName + "\t" +
+		  up.oldContent + "\t\n";
+		for(int i = 0; i<message.length();++i){
+		  data_[i] = message[i];
+		}
+		do_write(message.length());
+		}
+		}
+	        else if(words[0].compare("IsTyping"))
 		  {
-		    // pop the stack
-		    // update clients
+		    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+		    Warden* user = wardenLookup[port];
+		    string message = string("IsTyping\t") + words[1] + "\t" +
+		      words[2] + "\t\n";
+		    for(int i = 0; i<message.length();++i){
+		      data_[i] = message[i];
+		    }
+		    do_write(message.length());
+		    // IsTyping\t clientID\t cellName\t\n
+		    // propogate exact message to all clients
 		  }
 
-	    }
-	    //	    else if(words[0].compare("IsTyping"))
-	    {
-	      
-		// IsTyping\t clientID\t cellName\t\n
-		// propogate exact message to all clients
-	    }
-	    //	    else if(words[0].compare("DoneTyping"))
-	    {
+	    //else if(words[0].compare("DoneTyping"))
+		else if(words[0].compare("DoneTyping"))
+		  {
+		    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+		    Warden* user = wardenLookup[port];
+		    string message = string("DoneTyping\t") + words[1] + "\t" +
+		      words[2] + "\t\n";
+		    for(int i = 0; i<message.length();++i){
+		      data_[i] = message[i];
+		    }
+		    do_write(message.length());
 
 
-		// DoneTyping\t clientID\t cellName\t\n
-		// propogate exact message to all clients
-	    }*/
+		    // DoneTyping\t clientID\t cellName\t\n
+		    // propogate exact message to all clients
+		  }
 	    else
 	      do_write(length);
 	    /*
@@ -192,61 +251,6 @@ private:
 		do_write(39);
 	    
 	    */
-	    
-	    /*
-	    int success = 0;
-	    switch(words[0])
-	      {
-	      case"Edit":
-		// Edit\t cellName\t cellContents\t\n
-		// update the spreadsheet
-		// save the updated spreadsheet
-		//	int success;
-		//	success = save(string[1],string[2]);
-
-		//	if(success)
-		  {
-		    // store edit in stack incase someone hits undo(maybe store previous data?)
-		    // update clients
-		  }
-
-		break;
-	      case "Undo":
-		// Undo\t\n
-		// get the top of the stack
-
-		//	success = save(cellname, oldvalue);
-		//	if(success)
-		  {
-		    // pop the stack
-		    // update clients
-		  }
-		break;
-	      case "Connect":
-		// Connect\t spreadsheetName\t\n
-		// send this client the spread sheet
-		// if not  created then create it
-		// add the client to that spreadsheet to that map
-
-		bzero(data_, 301);
-		
-		strcpy(data_, "=> I want to take you to a gay bar\n");
-		do_write(length);
-		break;
-	      case "IsTyping":
-		// IsTyping\t clientID\t cellName\t\n
-		// propogate exact message to all clients 
-		break;
-	      case "DoneTyping":
-		// DoneTyping\t clientID\t cellName\t\n
-		// propogate exact message to all clients
-		break;
-
-
-	      }
-
-	    */
-	    // do_write(length);
           }
         });
   }
@@ -327,9 +331,19 @@ int main(int argc, char* argv[])
 }
 
 // saves changes to the spreadsheet returns success or failure.
-int save(string cellName, string cellContents)
+int save(string spreadsheetName,  map<string, string>* CellContents)
 {
+  map<string,string>::iterator it;// = new map<string,string
 
+  // open a file to write to
+  ofstream save(spreadsheetName);
+
+
+  // iterate through the map and write them to the .txt file
+  for(it = CellContents->begin(); it != CellContents->end(); it++)
+    {
+      save << it->first << "\t" << it->second << "\t\n";
+    }
 }
 
 int updateClients()
@@ -346,15 +360,13 @@ void AddUser(Warden* user){
 
   if (sheetIT != Spreadsheets.end()){
     // if so -> add user to the users list
-    (Spreadsheets[sheetName]->Users)[user->ID] = user;
+    //    (Spreadsheets[sheetName]->Users)[user->ID] = user;
   } else{
     // if not -> create a new (empty) sheet pak and contents
     Sheet_pak* newSheet = new Sheet_pak;
     map<int, Warden*> *newUsers = new map<int, Warden*>; // needs to be in heap
     map<string, string> *newCells = new map<string, string>; // needs to be in the heap
     stack<undo_pak> *newUndos = new stack<undo_pak>; // needs to be in the heap
-
-    // if spreadsheet file exists, populate the CellContents
 
     // set contents to new allocated structures
     newSheet->Users = *newUsers;
