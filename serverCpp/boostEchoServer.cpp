@@ -103,7 +103,6 @@ private:
 		  {
 		    words.push_back(word);
 		    word = "";
-		    i++;
 
 		  }
 		else if(j == 10)
@@ -121,23 +120,25 @@ private:
 		string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 
 		// create a malloc'd string of spreadsheet name
-		char* sheetName = (char*)malloc(12);
-		strcpy(sheetName, "sample.sprd");
-
+		char* sheetName = new char[words[1].length()+1];
+		strcpy(sheetName, words[1].c_str());
+		
 		// set user's spreadsheet field to new string
 		Warden* user = wardenLookup[port];
 		user->spreadsheet = sheetName;
 
 		// add user to the spreadsheet's users list
+		//  calls open if required 
 		AddUser(user);
 
 		// Test out the dictionary for proper contents
+		cout << "Stored Sheet Name: ";
 		cout << (Spreadsheets[sheetName]->Users)[user->ID]->spreadsheet << endl;
 		
-		bzero(data_, 301);
-		
-		strcpy(data_, "I want to take you to a gay bar \n");
-		do_write(39);
+		// Build the Startup data for spreadsheet
+		// 
+		// send the data to the user
+		//SendMessage(user, "data goes here");
 	      }/*
 	    //	    else if(words[0].compare("Edit"))
 	    /* {
@@ -345,13 +346,15 @@ void AddUser(Warden* user){
 
   if (sheetIT != Spreadsheets.end()){
     // if so -> add user to the users list
-    //    (Spreadsheets[sheetName]->Users)[user->ID] = user;
+    (Spreadsheets[sheetName]->Users)[user->ID] = user;
   } else{
     // if not -> create a new (empty) sheet pak and contents
     Sheet_pak* newSheet = new Sheet_pak;
     map<int, Warden*> *newUsers = new map<int, Warden*>; // needs to be in heap
     map<string, string> *newCells = new map<string, string>; // needs to be in the heap
     stack<undo_pak> *newUndos = new stack<undo_pak>; // needs to be in the heap
+
+    // if spreadsheet file exists, populate the CellContents
 
     // set contents to new allocated structures
     newSheet->Users = *newUsers;
