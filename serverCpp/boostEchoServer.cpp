@@ -40,9 +40,9 @@ typedef struct{
 
 // contains all data related to a single spreadsheet
 typedef struct{
-  map<int, Warden*>* Users; // dictionary of users connected to this spreadsheet
-  map<string, string>* CellContents; // key = CellName; value = CellContent
-  stack<undo_pak>* Undos; // stack of undo-pak's
+  map<int, Warden*> Users; // dictionary of users connected to this spreadsheet
+  map<string, string> CellContents; // key = CellName; value = CellContent
+  stack<undo_pak> Undos; // stack of undo-pak's
 }Sheet_pak;
 
 // contains all currently open spreadsheets.
@@ -69,7 +69,8 @@ public:
     cout << port << " " << &socket_ << endl;
     
     // create a new warden; remember to clean this up
-    Warden* newClient = (Warden*)malloc(sizeof(Warden));
+    // Warden* newClient = (Warden*)malloc(sizeof(Warden));
+    Warden* newClient = new Warden;
     newClient->ID = clientID++; // need to lock this
     newClient->socket = &socket_;
     newClient->spreadsheet = NULL;
@@ -129,6 +130,9 @@ private:
 
 		// add user to the spreadsheet's users list
 		AddUser(user);
+
+		// Test out the dictionary for proper contents
+		cout << (Spreadsheets[sheetName]->Users)[user->ID]->spreadsheet << endl;
 		
 		bzero(data_, 301);
 		
@@ -343,16 +347,21 @@ void AddUser(Warden* user){
     // if so -> add user to the users list
     //    (Spreadsheets[sheetName]->Users)[user->ID] = user;
   } else{
-    // if not -> create a new (empty) sheet pak and add the user
-    Sheet_pak* newSheet = (Sheet_pak*)malloc(sizeof(Sheet_pak));
-    map<int, Warden*> newUsers; // needs to be in heap
-    map<string, string> newCells; // needs to be in the heap
-    stack<undo_pak> newUndos; // needs to be in the heap
-    newUsers[user->ID] = user;
+    // if not -> create a new (empty) sheet pak and contents
+    Sheet_pak* newSheet = new Sheet_pak;
+    map<int, Warden*> *newUsers = new map<int, Warden*>; // needs to be in heap
+    map<string, string> *newCells = new map<string, string>; // needs to be in the heap
+    stack<undo_pak> *newUndos = new stack<undo_pak>; // needs to be in the heap
 
-    newSheet->Users = &newUsers;
-    newSheet->CellContents = &newCells;
-    newSheet->Undos = &newUndos;    
+    // set contents to new allocated structures
+    newSheet->Users = *newUsers;
+    newSheet->CellContents = *newCells;
+    newSheet->Undos = *newUndos;    
 
+    // add the user to the Users dictionary
+    newSheet->Users[user->ID] = user;
+
+    // add the Sheet Pak to the Spreadsheet Dictionary
+    Spreadsheets[sheetName] = newSheet;
   }
 }
