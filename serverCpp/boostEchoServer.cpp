@@ -8,7 +8,7 @@ U of U
 CS3500
 Spring 2017
 
-Spread Sheet Server
+Spread heet Server
 
 The pupose of this file is act as a network controller using TCP as
 well as a server to send and recieves messages across the controller 
@@ -209,13 +209,9 @@ private:
 				      //{		  
 				      string message = string("Change\t") + words[1] + "\t" + words[2] + "\t\n";
 				      strcpy(data_, message.c_str());
-				      /*	for(int i = 0; i<message.length();++i)
-						{
-						data_[i] = message[i];
-						}*/
 
 				      undo_pak* up = &(Spreadsheets[sheetName]->Undos.top());
-				      //new char* = new char[strlen];
+				      
 		  
 				      cout << "Checking undos.top()" << endl;
 				      cout << up->cellName <<endl;
@@ -224,8 +220,7 @@ private:
 
 				      do_write(user, data_, 1, message.size() + 1);
 				      cout<<"SentBack: "<< message <<endl;
-				      // update clients
-				      //}
+				      
 				    }
 				  else if(!words[0].compare("Undo"))
 				    {
@@ -249,11 +244,6 @@ private:
 					  sp->Undos.pop();
 					  strcpy(data_, message.c_str());
 					  do_write(user, data_, 1, message.size() + 1);
-					  /*
-					    for(int i = 0; i<message.length();++i){
-					    data_[i] = message[i];
-					    }*/
-					  //  do_write(message.length());
 					}
 				    }
 				  else if(!words[0].compare("IsTyping"))
@@ -263,33 +253,32 @@ private:
 				      string message = string("IsTyping\t") + words[1] + "\t" +
 					words[2] + "\t\n";
 				      strcpy(data_, message.c_str());
-				      /*		  for(int i = 0; i<message.length();++i){
-							  data_[i] = message[i];
-							  }*/
+
 				      do_write(user, data_, 1, message.size() + 1);
-				      // IsTyping\t clientID\t cellName\t\n
-				      // propogate exact message to all clients
 				    }
 
-				  //else if(words[0].compare("DoneTyping"))
 				  else if(!words[0].compare("DoneTyping"))
 				    {
 				      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 				      Warden* user = wardenLookup[port];
 				      string message = string("DoneTyping\t") + words[1] + "\t" +
 					words[2] + "\t\n";
-				      /*  for(int i = 0; i<message.length();++i){
-					  data_[i] = message[i];
-					  }*/
+
 				      strcpy(data_, message.c_str());
 				      do_write(user, data_, 1, message.size() + 1);
 
-
-				      // DoneTyping\t clientID\t cellName\t\n
-				      // propogate exact message to all clients
 				    }
-				  //  else
-				  // do_write(length);
+				  else
+				    {
+				      string temp = "Edit\t";
+				      temp.append(words[1]);
+				      temp.append("\t");
+				      temp.append(words[2]);
+				      temp.append("\t\n");
+				      bzero(data_,1024);
+				      strcpy(data_, temp.c_str());
+				      do_write(user,data_ , 1, temp.size() + 1);
+				    }
 	   
 	    
 	   
@@ -321,7 +310,7 @@ private:
 				     {
 				       if (!ec)
 					 {
-					   cout << "write: " << data_ << endl;
+					   cout << "write: " << data_ << " socket: " << *((it->second)->ID) << endl;
 					   do_read();
 					 }
 				     });
@@ -463,7 +452,7 @@ void AddUser(Warden* user){
 	string buff;
 	string s[2];
 	int index = 0;
-	inputFile.open("test.txt");
+	inputFile.open(sheetName);
 
 	while(getline(inputFile, line))
 	  {
@@ -476,7 +465,7 @@ void AddUser(Warden* user){
 		cout << token << endl;
 		s[index++] = token;
 	      }
-      
+     
 	    (*newCells)[s[0]] = s[1];
 	    //cout << "s0 " << s[0] << " s1 " << s[1] << endl;
 	    /*

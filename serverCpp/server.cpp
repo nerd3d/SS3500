@@ -122,10 +122,10 @@ private:
 					word+=data_[i];
 		
 				    }
-				  cout<<"finished parse"<<endl;
-				  cout << "words: " << words[0]<<endl;//<<words[1] <<words[2]<<endl;
+
 				  string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 				  Warden* user = wardenLookup[port];
+
 				  if(!words[0].compare("Connect"))
 				    {
 		
@@ -150,10 +150,14 @@ private:
 				      toSend.append(to_string(user->ID));
 				      toSend.append("\t");
 
+				      map<string, string> temp;
+				      temp = Spreadsheets[sheetName]->CellContents;
 				      // itterate thought the spreadsheet the client wants to use and append
 				      // it to the string the sever sends them
-				      for(auto it = Spreadsheets[user->spreadsheet]->CellContents.cbegin(); it != Spreadsheets[user->spreadsheet]->CellContents.cend(); ++ it)
+				      for(auto it = temp.cbegin(); it != temp.cend(); ++it)
 					{
+					  cout << "in startup first: " << it->first << " second: " << it->second << " " << endl;
+
 					  toSend.append(it->first);
 					  toSend.append("\t");
 					  toSend.append(it->second);
@@ -171,9 +175,7 @@ private:
 				    {
 				      cout << "Got to Edit.." << endl;
 				      char* sheetName = user->spreadsheet;
-				      // Edit\t cellName\t cellContents\t\n
-				      // update the spreadsheet
-				      //prep undo
+
 				      undo_pak* newUndo = new undo_pak;
 				      char* word1 = new char[words[1].length()+1];
 				      strcpy(word1, words[1].c_str());
@@ -346,6 +348,8 @@ private:
 
   }
 
+
+
   tcp::socket socket_;
   // enum {Edit, Undo, Connect, IsTyping, DoneTyping}
   enum { max_length = 1024 };
@@ -385,6 +389,10 @@ private:
 
 int main(int argc, char* argv[])
 {
+  Spreadsheets = *(new map<string, Sheet_pak*>) ;
+
+  wardenLookup = *(new map<string, Warden*>) ;
+
   try
     {
       if (argc != 2)
@@ -463,31 +471,32 @@ void AddUser(Warden* user){
 	string buff;
 	string s[2];
 	int index = 0;
-	inputFile.open("test.txt");
+	inputFile.open(sheetName);
 
 	while(getline(inputFile, line))
 	  {
 
 	    istringstream iss(line);
 	    string token;
+	    cout << line << endl;
 
 	    while(getline(iss,token, '\t'))
 	      {
-		cout << token << endl;
 		s[index++] = token;
 	      }
       
 	    (*newCells)[s[0]] = s[1];
 	    //cout << "s0 " << s[0] << " s1 " << s[1] << endl;
-	    /*
-	      for(auto it = newCells.cbegin(); it != newCells.cend(); ++it)
+	   
+	    index = 0;
+	  }
+
+
+	    for(auto it = (*newCells).cbegin(); it != (*newCells).cend(); ++it)
 	      {
 	      cout<< "key: " << it->first << "\t\t " << "value: " << it->second << endl;
 
 	      }
-	    */
-	    index = 0;
-	  }
       }
   }
 }
