@@ -49,9 +49,9 @@ typedef struct{
 
 // contains all data related to a single spreadsheet
 typedef struct{
-  map<int, Warden*> Users; // dictionary of users connected to this spreadsheet
-  map<string, string> CellContents; // key = CellName; value = CellContent
-  stack<undo_pak> Undos; // stack of undo-pak's
+  map<int, Warden*> *Users; // dictionary of users connected to this spreadsheet
+  map<string, string> *CellContents; // key = CellName; value = CellContent
+  stack<undo_pak> *Undos; // stack of undo-pak's
 }Sheet_pak;
 
 // contains all currently open spreadsheets.
@@ -143,7 +143,7 @@ private:
 
 				      // Test out the dictionary for proper contents
 				      cout << "Stored Sheet Name: ";
-				      cout << (Spreadsheets[sheetName]->Users)[user->ID]->spreadsheet << endl;
+				      cout << (*(Spreadsheets[sheetName]->Users))[user->ID]->spreadsheet << endl;
 
 				      // string to send to the client
 				      string toSend = "Startup\t";
@@ -151,7 +151,7 @@ private:
 				      toSend.append("\t");
 
 				      map<string, string> temp;
-				      temp = Spreadsheets[sheetName]->CellContents;
+				      temp = *(Spreadsheets[sheetName]->CellContents);
 				      // itterate thought the spreadsheet the client wants to use and append
 				      // it to the string the sever sends them
 				      for(auto it = temp.cbegin(); it != temp.cend(); ++it)
@@ -184,28 +184,28 @@ private:
 
 				      std::map<string,string>::iterator it;
 
-				      it = (Spreadsheets[sheetName]->CellContents).find(word1);
-				      if (it == (Spreadsheets[sheetName]->CellContents).end())
+				      it = (*(Spreadsheets[sheetName]->CellContents)).find(word1);
+				      if (it == (*(Spreadsheets[sheetName]->CellContents)).end())
 					{
 					  newUndo->oldContent = new char[1];
 					  *(newUndo->oldContent) = 0;
 					}
 				      else
 					{
-					  char* temp55 = new char[(Spreadsheets[sheetName]->CellContents)[word1].length()+1];
-					  strcpy(temp55, (Spreadsheets[sheetName]->CellContents)[word1].c_str());
+					  char* temp55 = new char[(*(Spreadsheets[sheetName]->CellContents))[word1].length()+1];
+					  strcpy(temp55, (*(Spreadsheets[sheetName]->CellContents))[word1].c_str());
 					  cout <<"temp55:" << temp55 <<endl;
 					  newUndo->oldContent = temp55;//(Spreadsheets[sheetName]->CellContents)[word1];
 					}
 		
 				      // store undo (previous data in that cell)
-				      (Spreadsheets[sheetName]->Undos).push(*newUndo );
+				      (*(Spreadsheets[sheetName]->Undos)).push(*newUndo );
 				      char* word2 = new char[words[2].length()+1];
 				      strcpy(word2, words[2].c_str());
-				      Spreadsheets[sheetName]->CellContents[words[1]] = word2;
+				      (*(Spreadsheets[sheetName]->CellContents))[words[1]] = word2;
 				      // save the updated spreadsheet
 				      int success;
-				      success = save(sheetName, &Spreadsheets[sheetName]->CellContents);
+				      success = save(sheetName, Spreadsheets[sheetName]->CellContents);
 
 				      //if(success)
 				      //{		  
@@ -216,7 +216,7 @@ private:
 						data_[i] = message[i];
 						}*/
 
-				      undo_pak* up = &(Spreadsheets[sheetName]->Undos.top());
+				      undo_pak* up = &((*(Spreadsheets[sheetName]->Undos)).top());
 				      //new char* = new char[strlen];
 		  
 				      cout << "Checking undos.top()" << endl;
@@ -237,18 +237,18 @@ private:
 				      //Warden* user = wardenLookup[port];
 				      Sheet_pak* sp = Spreadsheets[user->spreadsheet];
 	      
-				      if(sp->Undos.size()>0)
+				      if((*(sp->Undos)).size()>0)
 					{
 
-					  undo_pak* up = &(sp->Undos.top());
+					  undo_pak* up = &((*(sp->Undos)).top());
 					  //new char* = new char[strlen];
 		  
 					  cout << up->cellName <<endl;
 					  cout << up->oldContent <<endl;
-					  (sp->CellContents)[up->cellName] = up->oldContent;
-					  string message = string("Change\t") + sp->Undos.top().cellName + "\t" +
-					    sp->Undos.top().oldContent + "\t\n";
-					  sp->Undos.pop();
+					  (*(sp->CellContents))[up->cellName] = up->oldContent;
+					  string message = string("Change\t") + (*(sp->Undos)).top().cellName + "\t" +
+					    (*(sp->Undos)).top().oldContent + "\t\n";
+					  (*(sp->Undos)).pop();
 					  strcpy(data_, message.c_str());
 					  do_write(user, data_, 1, message.size() + 1);
 					  /*
@@ -312,7 +312,7 @@ private:
     if(multi)
       {
 	
-	for(auto it = Spreadsheets[user->spreadsheet]->Users.cbegin(); it != Spreadsheets[user->spreadsheet]->Users.cend(); ++it)
+	for(auto it = (*(Spreadsheets[user->spreadsheet]->Users)).cbegin(); it != (*(Spreadsheets[user->spreadsheet]->Users)).cend(); ++it)
 	  {
 	    // cout<< "id : " << it->first << "\t\t " << "value: " << it->second << endl;
 
@@ -389,9 +389,9 @@ private:
 
 int main(int argc, char* argv[])
 {
-  Spreadsheets = *(new map<string, Sheet_pak*>) ;
+  //Spreadsheets = *(new map<string, Sheet_pak*>) ;
 
-  wardenLookup = *(new map<string, Warden*>) ;
+  //wardenLookup = *(new map<string, Warden*>) ;
 
   try
     {
@@ -445,7 +445,7 @@ void AddUser(Warden* user){
 
   if (sheetIT != Spreadsheets.end()){
     // if so -> add user to the users list
-    (Spreadsheets[sheetName]->Users)[user->ID] = user;
+    (*(Spreadsheets[sheetName]->Users))[user->ID] = user;
   } else{
     // if not -> create a new (empty) sheet pak and contents
     Sheet_pak* newSheet = new Sheet_pak;
@@ -454,12 +454,12 @@ void AddUser(Warden* user){
     stack<undo_pak> *newUndos = new stack<undo_pak>; // needs to be in the heap
 
     // set contents to new allocated structures
-    newSheet->Users = *newUsers;
-    newSheet->CellContents = *newCells;
-    newSheet->Undos = *newUndos;    
+    newSheet->Users = newUsers;
+    newSheet->CellContents = newCells;
+    newSheet->Undos = newUndos;    
 
     // add the user to the Users dictionary
-    newSheet->Users[user->ID] = user;
+    (*newUsers)[user->ID] = user;
 
     // add the Sheet Pak to the Spreadsheet Dictionary
     Spreadsheets[sheetName] = newSheet;
@@ -492,11 +492,11 @@ void AddUser(Warden* user){
 	  }
 
 
-	    for(auto it = (*newCells).cbegin(); it != (*newCells).cend(); ++it)
-	      {
-	      cout<< "key: " << it->first << "\t\t " << "value: " << it->second << endl;
+	for(auto it = (*newCells).cbegin(); it != (*newCells).cend(); ++it)
+	  {
+	    cout<< "key: " << it->first << "\t\t " << "value: " << it->second << endl;
 
-	      }
+	  }
       }
   }
 }
