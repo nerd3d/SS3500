@@ -16,3 +16,9 @@ C:\Users\Chris\Source\Repos\SS3500\Resources\bin\Debug\Resources.pdb
 C:\Users\Chris\Source\Repos\SS3500\Resources\obj\Debug\Resources.csprojResolveAssemblyReference.cache
 C:\Users\Chris\Source\Repos\SS3500\Resources\obj\Debug\Resources.dll
 C:\Users\Chris\Source\Repos\SS3500\Resources\obj\Debug\Resources.pdb
+C:\Users\User\Source\Repos\3505\Resources\bin\Debug\Resources.dll.config
+C:\Users\User\Source\Repos\3505\Resources\bin\Debug\Resources.dll
+C:\Users\User\Source\Repos\3505\Resources\bin\Debug\Resources.pdb
+C:\Users\User\Source\Repos\3505\Resources\obj\Debug\Resources.csprojResolveAssemblyReference.cache
+C:\Users\User\Source\Repos\3505\Resources\obj\Debug\Resources.dll
+C:\Users\User\Source\Repos\3505\Resources\obj\Debug\Resources.pdb
