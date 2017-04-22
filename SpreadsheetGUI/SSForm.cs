@@ -28,14 +28,15 @@ namespace SS {
       this.Text = filename;
       addressBox.Text = "A1";
       warden = ward;
-//      warden.callNext = Send_Message;
+      warden.callNext = Sent_Message;
 
       // Set warden callback function for server messages
       listenWarden = new NetworkWarden(warden.socket, warden.ID);
-      listenWarden.callNext = Recieve_Message;
+      listenWarden.callNext = Receive_Message;
 
       // Send the filename to the server
       Networking.getData(listenWarden);
+      System.Threading.Thread.Sleep(800);
       Networking.Send(warden, "Connect\t" + filename + "\t\n");
 
     }
@@ -99,8 +100,18 @@ namespace SS {
     /// Use to send messages to the server
     /// </summary>
     /// <param name="ward"></param>
-    private void Send_Message(NetworkWarden ward) {
+    private void Sent_Message(NetworkWarden ward) {
+      if(ward.buffString == null) {
+        return;
+      }
 
+      string msg = ward.buffString;
+      
+      string[] parsedMsg = msg.Split('\t');
+
+      if (parsedMsg[0] == "Startup") {
+        this.Invoke(new MethodInvoker(() => Receive_Startup(parsedMsg)));
+      }
     }
 
     /********************************************************************************************
@@ -108,28 +119,31 @@ namespace SS {
      ********************************************************************************************/
 
     /// <summary>
-    /// recieve hub - decodes message and activate proper command
+    /// Receive hub - decodes message and activate proper command
     /// </summary>
-    public void Recieve_Message(NetworkWarden ward) {
+    public void Receive_Message(NetworkWarden ward) {
+      if (ward.buffString == null) {
+        return;
+      }
+
       string msg = ward.buffString;
 
       string[] parsedMsg = msg.Split('\t');
+      System.Diagnostics.Debug.Print(parsedMsg[0]);
 
       switch (parsedMsg[0]) {
-        case "Startup":
-          this.Invoke(new MethodInvoker(() => Recieve_Startup(parsedMsg)));
-          break;
         case "Change":
-          this.Invoke(new MethodInvoker(() => Recieve_Change(parsedMsg)));
+          this.Invoke(new MethodInvoker(() => Receive_Change(parsedMsg)));
           break;
         case "IsTyping":
-          this.Invoke(new MethodInvoker(() => Recieve_IsTyping(parsedMsg)));
+          this.Invoke(new MethodInvoker(() => Receive_IsTyping(parsedMsg)));
           break;
         case "DoneTyping":
-          this.Invoke(new MethodInvoker(() => Recieve_DoneTyping(parsedMsg)));
+          this.Invoke(new MethodInvoker(() => Receive_DoneTyping(parsedMsg)));
           break;
         default:
-          // error in recieved message: gracefully close everything
+          // error in Received message: gracefully close everything
+          System.Diagnostics.Debug.Print("Bad Message Recieved");
           break;
       }
       Networking.getData(ward);
@@ -138,22 +152,25 @@ namespace SS {
     /// <summary>
     /// Pupulates an empty spreadsheet with given data
     /// </summary>
-    private void Recieve_Startup(string[] message) {
-      if (Int32.TryParse(message[1], out warden.ID)) {
-        Console.WriteLine("Invalid user ID"); }
-      else {
-        for(int i = 2; i < message.Length; i++) {
+    private void Receive_Startup(string[] message) {
 
+      if (!Int32.TryParse(message[1], out warden.ID)) {
+        //throw new Exception("Invalid user ID");
+      } else {
+        listenWarden.ID = warden.ID;
+        for (int i = 2; i < message.Length-1; i += 2) {
+          string[] convertToChange = { "Change", message[i], message[i + 1] };
+          Receive_Change(convertToChange);
         }
       }
     }
 
     /// <summary>
-    /// Recieves a Change from the server and applys it to the spreadsheet
+    /// Receives a Change from the server and applys it to the spreadsheet
     /// </summary>
-    private void Recieve_Change(string[] message) {
+    private void Receive_Change(string[] message) {
       int col, row;
-      
+
       string address = message[1];
       string content;
       if (message.Length > 2)
@@ -199,14 +216,14 @@ namespace SS {
     /// <summary>
     /// Sets a cell to "being edited" status
     /// </summary>
-    private void Recieve_IsTyping(string[] message) {
+    private void Receive_IsTyping(string[] message) {
 
     }
 
     /// <summary>
     /// Removes "being edited" status from a cell
     /// </summary>
-    private void Recieve_DoneTyping(string[] message) {
+    private void Receive_DoneTyping(string[] message) {
 
     }
 
