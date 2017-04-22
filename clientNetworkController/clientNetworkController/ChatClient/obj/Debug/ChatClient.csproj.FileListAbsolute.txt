@@ -16,3 +16,9 @@ C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\
 C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.csprojResolveAssemblyReference.cache
 C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.exe
 C:\Users\User\Source\Repos\3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.pdb
+C:\Users\Shafigh\Source\Repos\ss3505\clientNetworkController\clientNetworkController\ChatClient\bin\Debug\ChatClient.exe.config
+C:\Users\Shafigh\Source\Repos\ss3505\clientNetworkController\clientNetworkController\ChatClient\bin\Debug\ChatClient.exe
+C:\Users\Shafigh\Source\Repos\ss3505\clientNetworkController\clientNetworkController\ChatClient\bin\Debug\ChatClient.pdb
+C:\Users\Shafigh\Source\Repos\ss3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.csprojResolveAssemblyReference.cache
+C:\Users\Shafigh\Source\Repos\ss3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.exe
+C:\Users\Shafigh\Source\Repos\ss3505\clientNetworkController\clientNetworkController\ChatClient\obj\Debug\ChatClient.pdb
