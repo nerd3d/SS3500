@@ -28,7 +28,7 @@ namespace SS {
       this.Text = filename;
       addressBox.Text = "A1";
       warden = ward;
-      warden.callNext = Send_Message;
+//      warden.callNext = Send_Message;
 
       // Set warden callback function for server messages
       listenWarden = new NetworkWarden(warden.socket, warden.ID);
@@ -54,7 +54,16 @@ namespace SS {
       string address = gridToAddress(col, row);
       string content = contentBox.Text;
 
-      Networking.Send(warden, "Edit\t" + address + "\t" + content + "\t\n");
+      try {
+        personalSpreadsheet.CheckContentsAreValid(content);
+        Networking.Send(warden, "Edit\t" + address + "\t" + content + "\t\n");
+      }
+      catch (Exception err) //something went wrong while setting the contents
+      {
+        MessageBox.Show(err.Message, "Error Detected!", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+        contentBox.SelectAll();
+        contentBox.Focus();
+      }
     }
 
     /// <summary>
@@ -110,7 +119,7 @@ namespace SS {
         case "Startup":
           this.Invoke(new MethodInvoker(() => Recieve_Startup(parsedMsg)));
           break;
-        case "Edit": // should be "Change"
+        case "Change":
           this.Invoke(new MethodInvoker(() => Recieve_Change(parsedMsg)));
           break;
         case "IsTyping":
@@ -130,7 +139,13 @@ namespace SS {
     /// Pupulates an empty spreadsheet with given data
     /// </summary>
     private void Recieve_Startup(string[] message) {
+      if (Int32.TryParse(message[1], out warden.ID)) {
+        Console.WriteLine("Invalid user ID"); }
+      else {
+        for(int i = 2; i < message.Length; i++) {
 
+        }
+      }
     }
 
     /// <summary>
@@ -138,11 +153,7 @@ namespace SS {
     /// </summary>
     private void Recieve_Change(string[] message) {
       int col, row;
-      /*
-      spreadsheetPanel1.GetSelection(out col, out row);
-      string address = gridToAddress(col, row);
-      string content = contentBox.Text;
-      */
+      
       string address = message[1];
       string content;
       if (message.Length > 2)
