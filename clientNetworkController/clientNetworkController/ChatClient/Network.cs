@@ -190,8 +190,8 @@ namespace ChatClient
         /// <param name="data"></param>
         public static void Send(NetworkWarden ward, String data)
         {
-            data = data.TrimEnd();//removes any leftover spaces
-            byte[] bytes = Encoding.UTF8.GetBytes(data + "\n");
+            //data = data.TrimEnd();//removes any leftover spaces
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
             try
             {
                 ward.socket.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, StopSend, ward);

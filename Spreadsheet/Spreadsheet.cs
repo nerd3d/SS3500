@@ -281,6 +281,17 @@ namespace SS {
       return recalculateSet;
     }
 
+    public bool CheckContentsAreValid(string content) {
+      // determine if the content is a valid input
+      if(content != "") {
+        if (content[0] == '=') { // if Formula, check if it is a valid (Formula)
+          Formula dummy = new Formula(content.TrimStart('='), Normalize, IsValid); // this will throw error if invalid formula
+        }
+      }
+
+      return true;
+    }
+
     /// <summary>
     /// If text is null, throws an ArgumentNullException. 
     /// 

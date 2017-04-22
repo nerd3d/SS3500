@@ -1,20 +1,67 @@
-//
-// async_tcp_echo_server.cpp
-// ~~~~~~~~~~~~~~~~~~~~~~~~~
-//
-// Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
+/********************************************************************
+Chris Allan
+Adam Bennion
+Aaron Benson
+Shafigh Bohamin
+
+U of U
+CS3500
+Spring 2017
+
+Spread heet Server
+
+The pupose of this file is act as a network controller using TCP as
+well as a server to send and recieves messages across the controller 
+and store the spread sheet data.
+
+ ********************************************************************/
 
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <vector>
+#include <string.h>
+#include <fstream>
+#include <map>
+#include <stack>
+#include <boost/lexical_cast.hpp>
 
 using boost::asio::ip::tcp;
+using namespace std;
+
+static int clientID = 0; // next available user ID
+
+// contains all info related to a single user connection (socket)
+typedef struct{
+  int ID; // client ID (unique resuired)
+  tcp::socket* socket; // socket connection for user
+  char* spreadsheet; // spreadsheet user is editing (required)
+  char* inCell; // cell user is currently editing (null == none)
+}Warden;
+
+// contains all info to impliment an Undo
+typedef struct{
+  char* cellName;
+  char* oldContent;
+}undo_pak;
+
+// contains all data related to a single spreadsheet
+typedef struct{
+  map<int, Warden*> Users; // dictionary of users connected to this spreadsheet
+  map<string, string> CellContents; // key = CellName; value = CellContent
+  stack<undo_pak> Undos; // stack of undo-pak's
+}Sheet_pak;
+
+// contains all currently open spreadsheets.
+map<string, Sheet_pak*> Spreadsheets;
+
+// contains a means for a socket to find it's warden
+map<string, Warden*> wardenLookup;
+
+void AddUser(Warden* user);
+int save(string spreadsheetName,  map<string, string>* CellContents);
 
 class session
   : public std::enable_shared_from_this<session>
@@ -27,37 +74,269 @@ public:
 
   void start()
   {
+
+    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+    cout << port << " " << &socket_ << endl;
+    
+    // create a new warden; remember to clean this up
+    // Warden* newClient = (Warden*)malloc(sizeof(Warden));
+    Warden* newClient = new Warden;
+    newClient->ID = clientID++; // need to lock this
+    newClient->socket = &socket_;
+    newClient->spreadsheet = NULL;
+    newClient->inCell = NULL;
+
+    wardenLookup[port] = newClient; 
+
+
     do_read();
   }
 
-private:
+private: 
   void do_read()
   {
     auto self(shared_from_this());
     socket_.async_read_some(boost::asio::buffer(data_, max_length),
-        [this, self](boost::system::error_code ec, std::size_t length)
-        {
-          if (!ec)
-          {
-            do_write(length);
-          }
-        });
+			    [this, self](boost::system::error_code ec, std::size_t length)
+			    {
+			      if (!ec)
+				{
+				  cout << "read: " << data_ << endl; // debug message (recieved input)
+				  // parse the string
+				  vector<string> words;
+				  string word;
+				  for(int i = 0; i < max_length; i++)
+				    {
+				      int j = data_[i];
+				      if(j == 9)
+					{
+					  words.push_back(word);
+					  word = "";
+					}
+				      else if(j == 10)
+					{
+					  words.push_back(word);
+					  break;
+					}
+				      else
+					word+=data_[i];
+		
+				    }
+				  cout<<"finished parse"<<endl;
+				  cout << "words: " << words[0]<<endl;//<<words[1] <<words[2]<<endl;
+				  string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+				  Warden* user = wardenLookup[port];
+				  if(!words[0].compare("Connect"))
+				    {
+		
+
+				      // create a malloc'd string of spreadsheet name
+				      char* sheetName = new char[words[1].length()+1];
+				      strcpy(sheetName, words[1].c_str());
+		
+				      // set user's spreadsheet field to new string		
+				      user->spreadsheet = sheetName;
+
+				      // add user to the spreadsheet's users list
+				      // calls open if required 
+				      AddUser(user);
+
+				      // Test out the dictionary for proper contents
+				      cout << "Stored Sheet Name: ";
+				      cout << (Spreadsheets[sheetName]->Users)[user->ID]->spreadsheet << endl;
+
+				      // string to send to the client
+				      string toSend = "Startup\t";
+				      toSend.append(to_string(user->ID));
+				      toSend.append("\t");
+
+				      // itterate thought the spreadsheet the client wants to use and append
+				      // it to the string the sever sends them
+				      for(auto it = Spreadsheets[user->spreadsheet]->CellContents.cbegin(); it != Spreadsheets[user->spreadsheet]->CellContents.cend(); ++ it)
+					{
+					  toSend.append(it->first);
+					  toSend.append("\t");
+					  toSend.append(it->second);
+					  toSend.append("\t");
+					}
+
+				      // add a next line on 
+				      toSend.append("\n");
+				      strcpy(data_, toSend.c_str());
+				      do_write(user, data_, 0, toSend.size() + 1);
+				      //	strcpy(data_, "I want to take you to a gay bar \n");
+				      //	do_write(39);
+				    }
+				  else if(!words[0].compare("Edit"))
+				    {
+				      cout << "Got to Edit.." << endl;
+				      char* sheetName = user->spreadsheet;
+				      // Edit\t cellName\t cellContents\t\n
+				      // update the spreadsheet
+				      //prep undo
+				      undo_pak* newUndo = new undo_pak;
+				      char* word1 = new char[words[1].length()+1];
+				      strcpy(word1, words[1].c_str());
+				      newUndo->cellName=word1;
+
+
+				      std::map<string,string>::iterator it;
+
+				      it = (Spreadsheets[sheetName]->CellContents).find(word1);
+				      if (it == (Spreadsheets[sheetName]->CellContents).end())
+					{
+					  newUndo->oldContent = new char[1];
+					  *(newUndo->oldContent) = 0;
+					}
+				      else
+					{
+					  char* temp55 = new char[(Spreadsheets[sheetName]->CellContents)[word1].length()+1];
+					  strcpy(temp55, (Spreadsheets[sheetName]->CellContents)[word1].c_str());
+					  cout <<"temp55:" << temp55 <<endl;
+					  newUndo->oldContent = temp55;//(Spreadsheets[sheetName]->CellContents)[word1];
+					}
+		
+				      // store undo (previous data in that cell)
+				      (Spreadsheets[sheetName]->Undos).push(*newUndo );
+				      char* word2 = new char[words[2].length()+1];
+				      strcpy(word2, words[2].c_str());
+				      Spreadsheets[sheetName]->CellContents[words[1]] = word2;
+				      // save the updated spreadsheet
+				      int success;
+				      success = save(sheetName, &Spreadsheets[sheetName]->CellContents);
+
+				      //if(success)
+				      //{		  
+				      string message = string("Change\t") + words[1] + "\t" + words[2] + "\t\n";
+				      strcpy(data_, message.c_str());
+
+				      undo_pak* up = &(Spreadsheets[sheetName]->Undos.top());
+				      
+		  
+				      cout << "Checking undos.top()" << endl;
+				      cout << up->cellName <<endl;
+				      cout << up->oldContent <<endl;
+
+
+				      do_write(user, data_, 1, message.size() + 1);
+				      cout<<"SentBack: "<< message <<endl;
+				      
+				    }
+				  else if(!words[0].compare("Undo"))
+				    {
+				      cout << "Got to Undo.." << endl;
+				      //string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+
+				      //Warden* user = wardenLookup[port];
+				      Sheet_pak* sp = Spreadsheets[user->spreadsheet];
+	      
+				      if(sp->Undos.size()>0)
+					{
+
+					  undo_pak* up = &(sp->Undos.top());
+					  //new char* = new char[strlen];
+		  
+					  cout << up->cellName <<endl;
+					  cout << up->oldContent <<endl;
+					  (sp->CellContents)[up->cellName] = up->oldContent;
+					  string message = string("Change\t") + sp->Undos.top().cellName + "\t" +
+					    sp->Undos.top().oldContent + "\t\n";
+					  sp->Undos.pop();
+					  strcpy(data_, message.c_str());
+					  do_write(user, data_, 1, message.size() + 1);
+					}
+				    }
+				  else if(!words[0].compare("IsTyping"))
+				    {
+				      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+				      Warden* user = wardenLookup[port];
+				      string message = string("IsTyping\t") + words[1] + "\t" +
+					words[2] + "\t\n";
+				      strcpy(data_, message.c_str());
+
+				      do_write(user, data_, 1, message.size() + 1);
+				    }
+
+				  else if(!words[0].compare("DoneTyping"))
+				    {
+				      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+				      Warden* user = wardenLookup[port];
+				      string message = string("DoneTyping\t") + words[1] + "\t" +
+					words[2] + "\t\n";
+
+				      strcpy(data_, message.c_str());
+				      do_write(user, data_, 1, message.size() + 1);
+
+				    }
+				  else
+				    {
+				      string temp = "Edit\t";
+				      temp.append(words[1]);
+				      temp.append("\t");
+				      temp.append(words[2]);
+				      temp.append("\t\n");
+				      bzero(data_,1024);
+				      strcpy(data_, temp.c_str());
+				      do_write(user,data_ , 1, temp.size() + 1);
+				    }
+	   
+	    
+	   
+				}
+			    });
   }
 
-  void do_write(std::size_t length)
+  void do_write(Warden *user, char* msg, bool multi, std::size_t length)
   {
+
     auto self(shared_from_this());
-    boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
-        [this, self](boost::system::error_code ec, std::size_t /*length*/)
-        {
-          if (!ec)
-          {
-            do_read();
-          }
-        });
+
+    // copy the message into the buffer to send to the specified socket
+    strcpy(data_, msg);
+
+
+
+    if(multi)
+      {
+	
+	for(auto it = Spreadsheets[user->spreadsheet]->Users.cbegin(); it != Spreadsheets[user->spreadsheet]->Users.cend(); ++it)
+	  {
+	    // cout<< "id : " << it->first << "\t\t " << "value: " << it->second << endl;
+
+    
+
+	    boost::asio::async_write(*((it->second)->socket), boost::asio::buffer(data_, length),
+				     [this, self](boost::system::error_code ec, std::size_t /*length*/)
+				     {
+				       if (!ec)
+					 {
+					   cout << "write: " << data_ << " socket: " << *((it->second)->ID) << endl;
+					   do_read();
+					 }
+				     });
+	  }
+
+      }
+    else
+      {
+
+	boost::asio::async_write(*(user->socket), boost::asio::buffer(data_, length),
+				 [this, self](boost::system::error_code ec, std::size_t /*length*/)
+				 {
+				   if (!ec)
+				     {
+				       cout << "write: " << data_ << endl;
+				       do_read();
+				     }
+				 });
+      }
+
+     
+
   }
 
   tcp::socket socket_;
+  // enum {Edit, Undo, Connect, IsTyping, DoneTyping}
   enum { max_length = 1024 };
   char data_[max_length];
 };
@@ -71,20 +350,22 @@ public:
   {
     do_accept();
   }
-
 private:
   void do_accept()
   {
     acceptor_.async_accept(socket_,
-        [this](boost::system::error_code ec)
-        {
-          if (!ec)
-          {
-            std::make_shared<session>(std::move(socket_))->start();
-          }
+			   [this](boost::system::error_code ec)
+			   {
+			     if (!ec)
+			       {
+				 string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+				 cout << port << " " << &socket_ << endl;
+	    
+				 std::make_shared<session>(std::move(socket_))->start();
+			       }
 
-          do_accept();
-        });
+			     do_accept();
+			   });
   }
 
   tcp::acceptor acceptor_;
@@ -94,23 +375,108 @@ private:
 int main(int argc, char* argv[])
 {
   try
-  {
-    if (argc != 2)
     {
-      std::cerr << "Usage: async_tcp_echo_server <port>\n";
-      return 1;
+      if (argc != 2)
+	{
+	  std::cerr << "Usage: async_tcp_echo_server <port>\n";
+	  return 1;
+	}
+
+      boost::asio::io_service io_service;
+
+      server s(io_service, std::atoi(argv[1]));
+
+      io_service.run();
+    }
+  catch (std::exception& e)
+    {
+      std::cerr << "Exception: " << e.what() << "\n";
     }
 
-    boost::asio::io_service io_service;
-
-    server s(io_service, std::atoi(argv[1]));
-
-    io_service.run();
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << "Exception: " << e.what() << "\n";
-  }
-
   return 0;
+}
+
+// saves changes to the spreadsheet returns success or failure.
+int save(string spreadsheetName,  map<string, string>* CellContents)
+{
+  map<string,string>::iterator it;// = new map<string,string
+
+  // open a file to write to
+  ofstream save(spreadsheetName);
+
+
+  // iterate through the map and write them to the .txt file
+  for(it = CellContents->begin(); it != CellContents->end(); it++)
+    {
+      save << it->first << "\t" << it->second << "\t\n";
+    }
+}
+
+int updateClients()
+{
+
+}
+
+void AddUser(Warden* user){
+  string sheetName = user->spreadsheet;
+
+  // check if spreadsheet already exists in dictionary
+  map< string, Sheet_pak*>::iterator sheetIT;
+  sheetIT = Spreadsheets.find(sheetName);
+
+  if (sheetIT != Spreadsheets.end()){
+    // if so -> add user to the users list
+    (Spreadsheets[sheetName]->Users)[user->ID] = user;
+  } else{
+    // if not -> create a new (empty) sheet pak and contents
+    Sheet_pak* newSheet = new Sheet_pak;
+    map<int, Warden*> *newUsers = new map<int, Warden*>; // needs to be in heap
+    map<string, string> *newCells = new map<string, string>; // needs to be in the heap
+    stack<undo_pak> *newUndos = new stack<undo_pak>; // needs to be in the heap
+
+    // set contents to new allocated structures
+    newSheet->Users = *newUsers;
+    newSheet->CellContents = *newCells;
+    newSheet->Undos = *newUndos;    
+
+    // add the user to the Users dictionary
+    newSheet->Users[user->ID] = user;
+
+    // add the Sheet Pak to the Spreadsheet Dictionary
+    Spreadsheets[sheetName] = newSheet;
+
+    if(ifstream(sheetName))
+      {
+	string line;
+	ifstream inputFile;
+	string buff;
+	string s[2];
+	int index = 0;
+	inputFile.open(sheetName);
+
+	while(getline(inputFile, line))
+	  {
+
+	    istringstream iss(line);
+	    string token;
+
+	    while(getline(iss,token, '\t'))
+	      {
+		cout << token << endl;
+		s[index++] = token;
+	      }
+     
+	    (*newCells)[s[0]] = s[1];
+	    //cout << "s0 " << s[0] << " s1 " << s[1] << endl;
+	    /*
+	      for(auto it = newCells.cbegin(); it != newCells.cend(); ++it)
+	      {
+	      cout<< "key: " << it->first << "\t\t " << "value: " << it->second << endl;
+
+	      }
+	    */
+	    index = 0;
+	  }
+      }
+  }
 }
