@@ -16,6 +16,7 @@ and store the spread sheet data.
 
 ********************************************************************/
 
+#include <mutex>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -63,6 +64,9 @@ map<string, Warden*> wardenLookup;
 void AddUser(Warden* user);
 int save(string spreadsheetName,  map<string, string>* CellContents);
 
+//lock for the race conditions
+mutex mtx;
+
 class session
   : public std::enable_shared_from_this<session>
 {
@@ -85,8 +89,9 @@ public:
     newClient->inCell = NULL;
 
     wardenLookup[port] = newClient; 
-
+    mtx.lock();
     do_read();
+    mtx.unlock();
   }
 
 private: 
@@ -102,6 +107,8 @@ private:
 	      // parse the string
 	      vector<string> words;
 	      string word;
+
+	      //lock for data_
 	      for(int i = 0; i < max_length; i++)
 		{
 		  int j = data_[i];
@@ -121,6 +128,9 @@ private:
 		}
 	      // port is a unique string assigned to each client
 	      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+
+
+
 	      // user is the warden that holds the current client connection
 	      Warden* user = wardenLookup[port];
 
