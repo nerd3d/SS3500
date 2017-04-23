@@ -76,6 +76,25 @@ public:
   {
   }
 
+  void disconnect(const boost::system::error_code& error, size_t bytes){
+    cout<<"disconnected disconnected!!!!" << error<<endl;
+  }
+
+  /*
+ void async_receive(boost::system::error_code const& error,
+                     size_t bytes_transferred)
+  {
+    if ((boost::asio::error::eof == error) ||
+        (boost::asio::error::connection_reset == error))
+    {
+      cout<<"HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"<<endl;
+    }
+    else
+    {
+    }
+    }*/
+
+
   void start()
   {
     string port = boost::lexical_cast<string>(socket_.remote_endpoint());
@@ -94,10 +113,14 @@ public:
     mtx.unlock();
   }
 
+
 private: 
   void do_read()
   {
     auto self(shared_from_this());
+
+    // async_receive(data_, disconnect);
+
     socket_.async_read_some(boost::asio::buffer(data_, max_length),
 	[this, self](boost::system::error_code ec, std::size_t length)
 	{
