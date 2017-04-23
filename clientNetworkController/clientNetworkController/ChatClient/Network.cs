@@ -199,7 +199,7 @@ namespace ChatClient
             catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine("Send Failed. Error occured: " + e);
-                return;
+                throw new Exception("Send Failed. Error occured: " + e);
             }
         }
 
