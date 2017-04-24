@@ -124,18 +124,25 @@ private:
     socket_.async_read_some(boost::asio::buffer(data_, max_length),
 	[this, self](boost::system::error_code ec, std::size_t length)
 	{
-
+	  /*
 	  if((boost::asio::error::eof == ec) || (boost::asio::error::connection_reset == ec)){
-	    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+	    try{
+	      string port = prt;
+	    cout<<"disconnectedddddddddddd"<<endl;
 	    Warden *user = wardenLookup[port];
 	    Sheet_pak deleteWarden = *(Spreadsheets[user->spreadsheet]);
 	    
 	    deleteWarden.Users->erase(user->ID);
 	    
 	    wardenLookup.erase(port);
-	    user->socket->close();
+	    // user->socket->close();
+	    delete(&(user->spreadsheet));
 	    delete(&(user));
-	  }
+	    }
+	    catch(exception& e){
+	      cout<<"shafigh"<<endl;
+	    }
+	    }*/
 	  if (!ec)
 	    {
 	      cout << "read: " << data_ << endl; // debug message (recieved input)
@@ -326,8 +333,6 @@ private:
 
   void do_write(Warden *user, char* msg, bool multi, std::size_t length)
   {
-    try{
-
     auto self(shared_from_this());
 
     // copy the message into the buffer to send to the specified socket
@@ -369,11 +374,7 @@ private:
 	     }
 	 });
       }
-    }
-    catch(boost::system::error_code const& error){
-      cout<<"disconnecteddddddddddddddddddddddddddddddd"<<endl;
 
-    }
      
 
   }
