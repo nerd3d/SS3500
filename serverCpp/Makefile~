@@ -1,2 +1,0 @@
-all: boostEchoServer.cpp
-	g++ -std=c++1 boostEchoServer.cpp /usr/local/lib/libboost_system.a
