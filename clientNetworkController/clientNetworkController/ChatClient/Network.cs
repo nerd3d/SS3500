@@ -171,7 +171,6 @@ namespace ChatClient
                 Console.WriteLine("Server said: " + newMessage);
                 warden.buffString = newMessage;
               }
-    
               warden.callNext(warden);
             }
             catch (Exception e)
