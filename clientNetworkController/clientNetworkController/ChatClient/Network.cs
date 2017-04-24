@@ -69,7 +69,7 @@ namespace ChatClient
     public static class Networking
     {
 
-        public const int PORT = 2113;
+        public const int PORT = 2112;
         /*
         *ConnectToServer
         *give callback function for first parameter.
