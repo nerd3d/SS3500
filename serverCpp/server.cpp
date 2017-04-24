@@ -16,6 +16,7 @@ and store the spread sheet data.
 
 ********************************************************************/
 
+#include <mutex>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -63,6 +64,9 @@ map<string, Warden*> wardenLookup;
 void AddUser(Warden* user);
 int save(string spreadsheetName,  map<string, string>* CellContents);
 
+//lock for the race conditions
+mutex mtx;
+
 class session
   : public std::enable_shared_from_this<session>
 {
@@ -71,6 +75,25 @@ public:
     : socket_(std::move(socket))
   {
   }
+
+  void disconnect(const boost::system::error_code& error, size_t bytes){
+    cout<<"disconnected disconnected!!!!" << error<<endl;
+  }
+
+  /*
+ void async_receive(boost::system::error_code const& error,
+                     size_t bytes_transferred)
+  {
+    if ((boost::asio::error::eof == error) ||
+        (boost::asio::error::connection_reset == error))
+    {
+      cout<<"HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"<<endl;
+    }
+    else
+    {
+    }
+    }*/
+
 
   void start()
   {
@@ -85,14 +108,19 @@ public:
     newClient->inCell = NULL;
 
     wardenLookup[port] = newClient; 
-
+    mtx.lock();
     do_read();
+    mtx.unlock();
   }
+
 
 private: 
   void do_read()
   {
     auto self(shared_from_this());
+
+    // async_receive(data_, disconnect);
+
     socket_.async_read_some(boost::asio::buffer(data_, max_length),
 	[this, self](boost::system::error_code ec, std::size_t length)
 	{
@@ -102,6 +130,8 @@ private:
 	      // parse the string
 	      vector<string> words;
 	      string word;
+
+	      //lock for data_
 	      for(int i = 0; i < max_length; i++)
 		{
 		  int j = data_[i];
@@ -121,6 +151,9 @@ private:
 		}
 	      // port is a unique string assigned to each client
 	      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
+
+
+
 	      // user is the warden that holds the current client connection
 	      Warden* user = wardenLookup[port];
 

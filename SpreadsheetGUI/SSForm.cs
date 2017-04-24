@@ -21,6 +21,7 @@ namespace SS
         private NetworkWarden listenWarden;
         private bool istyping;
         private string oldAddress;
+        private bool started = false;
         /// <summary>
         /// Constructor used for Multi-user Spreadsheet
         /// </summary>
@@ -44,8 +45,17 @@ s.ToUpper(), "PS6");
             // Send the filename to the server
             Networking.getData(listenWarden);
             System.Threading.Thread.Sleep(800);
-            Networking.Send(warden, "Connect\t" + filename + "\t\n");
-
+            try
+            {
+                Networking.Send(warden, "Connect\t" + filename + "\t\n");
+            }
+            catch (Exception err)
+            {
+                while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                {
+                }
+                Application.Exit();
+            }
         }
 
 
@@ -63,19 +73,18 @@ s.ToUpper(), "PS6");
             string address = gridToAddress(col, row);
             Send_DoneTyping(address);
             string content = contentBox.Text;
-
+            personalSpreadsheet.CheckContentsAreValid(content);
             try
-            {
-                personalSpreadsheet.CheckContentsAreValid(content);
+            {                
                 Networking.Send(warden, "Edit\t" + address + "\t" +
 content + "\t\n");
             }
-            catch (Exception err) //something went wrong while settingthe contents
+            catch (Exception err)
             {
-                MessageBox.Show(err.Message, "Error Detected!",
-MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                contentBox.SelectAll();
-                contentBox.Focus();
+                while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                {
+                }
+                Application.Exit();
             }
             }
 
@@ -96,8 +105,17 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
             if (!(istyping))
             {
                 istyping = true;
-                Networking.Send(warden, "IsTyping\t" + warden.ID +
-"\t" + address.ToString() + "\t\n");
+                try
+                {
+                Networking.Send(warden, "IsTyping\t" + warden.ID + "\t" + address.ToString() + "\t\n");
+                }
+                catch(Exception err)
+                {
+                    while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                    {
+                    }
+                    Application.Exit();
+                }
             }
         }
         /// <summary>
@@ -108,8 +126,17 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
             if (istyping)
             {
                 istyping = false;
-                Networking.Send(warden, "DoneTyping\t" + warden.ID +
-"\t" + address.ToString() + "\t\n");
+                try
+                {
+                    Networking.Send(warden, "DoneTyping\t" + warden.ID + "\t" + address.ToString() + "\t\n");
+                }
+                catch (Exception err)
+                {
+                    while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                    {
+                    }
+                    Application.Exit();
+                }
             }
 
         }
@@ -136,14 +163,11 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
 
             string msg = ward.buffString;
-
+            ward.buffString = null;
             string[] parsedMsg = msg.Split('\t');
+            started = true;
+            this.Invoke(new MethodInvoker(() => Receive_Startup(parsedMsg)));
 
-            if (parsedMsg[0] == "Startup")
-            {
-                this.Invoke(new MethodInvoker(() =>
-Receive_Startup(parsedMsg)));
-            }
         }
 
         /********************************************************************************************
@@ -159,11 +183,11 @@ Receive_Startup(parsedMsg)));
             {
                 return;
             }
-
             string msg = ward.buffString;
-
+            Array.Clear(ward.buffer, 0, ward.buffer.Length);
+            ward.buffString = "";
+            ward.message.Clear();
             string[] parsedMsg = msg.Split('\t');
-            System.Diagnostics.Debug.Print(parsedMsg[0]);
 
             switch (parsedMsg[0])
             {
@@ -172,12 +196,10 @@ Receive_Startup(parsedMsg)));
 Receive_Change(parsedMsg)));
                     break;
                 case "IsTyping":
-                    this.Invoke(new MethodInvoker(() =>
-Receive_IsTyping(parsedMsg)));
+                    this.Invoke(new MethodInvoker(() => Receive_IsTyping(parsedMsg)));
                     break;
                 case "DoneTyping":
-                    this.Invoke(new MethodInvoker(() =>
-Receive_DoneTyping(parsedMsg)));
+                    this.Invoke(new MethodInvoker(() => Receive_DoneTyping(parsedMsg)));
                     break;
                 default:
                     // error in Received message: gracefully close everything
@@ -228,9 +250,7 @@ message[i + 1] };
             try
             {
                 // set the contents and determine cells to recalculate
-                cellsToUpdate =
-(HashSet<string>)personalSpreadsheet.SetContentsOfCell(address,
-content);
+                cellsToUpdate = (HashSet<string>)personalSpreadsheet.SetContentsOfCell(address, content);
                 foreach (string cell in cellsToUpdate)
                 {
                     //get col, row
@@ -251,9 +271,8 @@ content);
                 spreadsheetPanel1.GetValue(col, row, out cellVal);
                 valueBox.Text = cellVal;
 
-                if (personalSpreadsheet.Changed &&
-(!Regex.IsMatch(this.Text, @"(\(unsaved\))$")))
-                    this.Text = this.Text + " (unsaved)";
+                //if (personalSpreadsheet.Changed && (!Regex.IsMatch(this.Text, @"(\(unsaved\))$")))
+                    //this.Text = this.Text + " (unsaved)";
             }
             catch (Exception err) //something went wrong while settingthe contents
             {
@@ -270,57 +289,19 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
         /// </summary>
         private void Receive_IsTyping(string[] message)
         {
-            Console.WriteLine("is typing recieved");
             int col, row;
             int idCheck;
             string id = message[1];
             string address = message[2];
-            string content = "...";
             int.TryParse(id, out idCheck);
-            HashSet<string> cellsToUpdate = null;
-            if (idCheck == warden.ID)
-            {
-
-            }
-            else
-            {
-                try
-                {
-                    // set the contents and determine cells to recalculate
-                    cellsToUpdate =
-(HashSet<string>)personalSpreadsheet.SetContentsOfCell(address,
-content);
-                    foreach (string cell in cellsToUpdate)
-                    {
-                        //get col, row
-                        addressToGrid(cell, out col, out row);
-
-                        object value = personalSpreadsheet.GetCellValue(cell);
-                        if (value is FormulaError)
-                        {
-                            value = ((FormulaError)value).Reason; //display the reason for error
-                        }
-                        //set value to display at cell
-                        spreadsheetPanel1.SetValue(col, row, value.ToString());
-
-                    }
-                    addressBox.Text = address;
-                    string cellVal;
-                    addressToGrid(address, out col, out row);
-                    spreadsheetPanel1.GetValue(col, row, out cellVal);
-                    valueBox.Text = cellVal;
-
-                }
-                catch (Exception err) //something went wrong whilesetting the contents
-                {
-                    MessageBox.Show(err.Message, "Error Detected!",
-MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                    contentBox.SelectAll();
-                    contentBox.Focus();
-                }
-                }
-                //Console.WriteLine("this person: " + id + " is editingthis cell: " + address);
-
+            //if (idCheck != warden.ID)
+            //{               
+                byte[] ascii = Encoding.ASCII.GetBytes(address);
+                col = ascii[0] - 65;
+                int.TryParse(address.Substring(1), out row);
+                row -= 1;
+                spreadsheetPanel1.SetValue(col, row, "...");
+            //}
         }
 
         /// <summary>
@@ -328,14 +309,33 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
         /// </summary>
         private void Receive_DoneTyping(string[] message)
         {
-
+            int col, row;
+            int idCheck;
+            string id = message[1];
+            string address = message[2];
+            int.TryParse(id, out idCheck);
+            //if (idCheck != warden.ID)
+            //{
+                byte[] ascii = Encoding.ASCII.GetBytes(address);
+                col = ascii[0] - 65;
+                int.TryParse(address.Substring(1), out row);
+                row -= 1;
+                spreadsheetPanel1.SetValue(col, row, personalSpreadsheet.GetCellValue(address).ToString());
+            //}
+            /*
             Console.WriteLine("done typing recieved");
             int col, row;
             string id = message[1];
             string address = message[2];
-            string content = "...";
-            HashSet<string> cellsToUpdate = null;
-            Console.WriteLine("this person: " + id + " is done editingthis cell: " + address);
+            System.Diagnostics.Debug.Print("ID " + id + " is done editing cell: " + address);
+            byte[] ascii = Encoding.ASCII.GetBytes(address);
+            col = ascii[0]-65;
+            int.TryParse(address.Substring(1), out row);
+            row -= 1;
+            System.Diagnostics.Debug.Print("cell returning to origin value: " + col + " " + row);
+            System.Diagnostics.Debug.Print("value of that cell: " + personalSpreadsheet.GetCellValue(address).ToString()); 
+            spreadsheetPanel1.SetValue(col, row, personalSpreadsheet.GetCellValue(address).ToString());
+            */
         }
 
         /********************************************************************************************
@@ -442,7 +442,7 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
 
             if (spreadsheetPanel1.GetValue(col, row, out value))
             {
-                //Assuming the cell now has a value it displays theadress and corresponding value.
+                //Assuming the cell now has a value it displays the address and corresponding value.
                 addressBox.Text = address = gridToAddress(col, row);
                 oldAddress = address;
                 valueBox.Text = value;
