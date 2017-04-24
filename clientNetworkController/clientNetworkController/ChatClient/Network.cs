@@ -171,7 +171,6 @@ namespace ChatClient
                 Console.WriteLine("Server said: " + newMessage);
                 warden.buffString = newMessage;
               }
-    
               warden.callNext(warden);
             }
             catch (Exception e)
@@ -199,7 +198,7 @@ namespace ChatClient
             catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine("Send Failed. Error occured: " + e);
-                return;
+                throw new Exception("Send Failed. Error occured: " + e);
             }
         }
 

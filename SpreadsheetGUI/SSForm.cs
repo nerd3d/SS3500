@@ -45,8 +45,17 @@ s.ToUpper(), "PS6");
             // Send the filename to the server
             Networking.getData(listenWarden);
             System.Threading.Thread.Sleep(800);
-            Networking.Send(warden, "Connect\t" + filename + "\t\n");
-
+            try
+            {
+                Networking.Send(warden, "Connect\t" + filename + "\t\n");
+            }
+            catch (Exception err)
+            {
+                while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                {
+                }
+                Application.Exit();
+            }
         }
 
 
@@ -64,19 +73,18 @@ s.ToUpper(), "PS6");
             string address = gridToAddress(col, row);
             Send_DoneTyping(address);
             string content = contentBox.Text;
-
+            personalSpreadsheet.CheckContentsAreValid(content);
             try
-            {
-                personalSpreadsheet.CheckContentsAreValid(content);
+            {                
                 Networking.Send(warden, "Edit\t" + address + "\t" +
 content + "\t\n");
             }
-            catch (Exception err) //something went wrong while settingthe contents
+            catch (Exception err)
             {
-                MessageBox.Show(err.Message, "Error Detected!",
-MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                contentBox.SelectAll();
-                contentBox.Focus();
+                while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                {
+                }
+                Application.Exit();
             }
             }
 
@@ -97,8 +105,17 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
             if (!(istyping))
             {
                 istyping = true;
-                Networking.Send(warden, "IsTyping\t" + warden.ID +
-"\t" + address.ToString() + "\t\n");
+                try
+                {
+                Networking.Send(warden, "IsTyping\t" + warden.ID + "\t" + address.ToString() + "\t\n");
+                }
+                catch(Exception err)
+                {
+                    while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                    {
+                    }
+                    Application.Exit();
+                }
             }
         }
         /// <summary>
@@ -109,8 +126,17 @@ MessageBoxButtons.OK, MessageBoxIcon.Stop);
             if (istyping)
             {
                 istyping = false;
-                Networking.Send(warden, "DoneTyping\t" + warden.ID +
-"\t" + address.ToString() + "\t\n");
+                try
+                {
+                    Networking.Send(warden, "DoneTyping\t" + warden.ID + "\t" + address.ToString() + "\t\n");
+                }
+                catch (Exception err)
+                {
+                    while (MessageBox.Show("Server is down, application will now close.", "", MessageBoxButtons.OK) == 0)
+                    {
+                    }
+                    Application.Exit();
+                }
             }
 
         }
@@ -224,10 +250,7 @@ message[i + 1] };
             try
             {
                 // set the contents and determine cells to recalculate
-                Console.WriteLine("actual content being set: " + content);
-                cellsToUpdate =
-(HashSet<string>)personalSpreadsheet.SetContentsOfCell(address,
-content);
+                cellsToUpdate = (HashSet<string>)personalSpreadsheet.SetContentsOfCell(address, content);
                 foreach (string cell in cellsToUpdate)
                 {
                     //get col, row

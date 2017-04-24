@@ -67,11 +67,11 @@ int save(string spreadsheetName,  map<string, string>* CellContents);
 //lock for the race conditions
 mutex mtx;
 
-class session
-  : public std::enable_shared_from_this<session>
+class spreadSheetServer
+  : public std::enable_shared_from_this<spreadSheetServer>
 {
 public:
-  session(tcp::socket socket)
+  spreadSheetServer(tcp::socket socket)
     : socket_(std::move(socket))
   {
   }
@@ -109,13 +109,13 @@ public:
 
     wardenLookup[port] = newClient; 
     mtx.lock();
-    do_read();
+    getData();
     mtx.unlock();
   }
 
 
 private: 
-  void do_read()
+  void getData()
   {
     auto self(shared_from_this());
 
@@ -124,6 +124,25 @@ private:
     socket_.async_read_some(boost::asio::buffer(data_, max_length),
 	[this, self](boost::system::error_code ec, std::size_t length)
 	{
+	  /*
+	  if((boost::asio::error::eof == ec) || (boost::asio::error::connection_reset == ec)){
+	    try{
+	      string port = prt;
+	    cout<<"disconnectedddddddddddd"<<endl;
+	    Warden *user = wardenLookup[port];
+	    Sheet_pak deleteWarden = *(Spreadsheets[user->spreadsheet]);
+	    
+	    deleteWarden.Users->erase(user->ID);
+	    
+	    wardenLookup.erase(port);
+	    // user->socket->close();
+	    delete(&(user->spreadsheet));
+	    delete(&(user));
+	    }
+	    catch(exception& e){
+	      cout<<"shafigh"<<endl;
+	    }
+	    }*/
 	  if (!ec)
 	    {
 	      cout << "read: " << data_ << endl; // debug message (recieved input)
@@ -149,6 +168,7 @@ private:
 		    word+=data_[i];
 		
 		}
+
 	      // port is a unique string assigned to each client
 	      string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 
@@ -201,7 +221,7 @@ private:
 		  
  /** WARNING! This is capable of overflow; need to fix **/
 		  strcpy(data_, toSend.c_str());
-		  do_write(user, data_, 0, toSend.size() + 1);
+		  sendData(user, data_, 0, toSend.size() + 1);
 		}
 	      /**************************************************
 	       * Edit <cellName> <cellContents> message recieved
@@ -250,7 +270,7 @@ private:
 		  strcpy(data_, message.c_str());
 
 		  // sent the message to the user(s)
-		  do_write(user, data_, 1, message.size() + 1);
+		  sendData(user, data_, 1, message.size() + 1);
 		  
 		}
 	      /************************
@@ -271,7 +291,7 @@ private:
 		      (*(sp->Undos)).pop();
 
 		      strcpy(data_, message.c_str());
-		      do_write(user, data_, 1, message.size() + 1);
+		      sendData(user, data_, 1, message.size() + 1);
 		    }
 		}
 	      /**************************************************
@@ -287,7 +307,7 @@ private:
 		  cout << "IsTyping message Received" << endl;
 		  
 		  // send response string
-		  do_write(user, data_, 1, message.size() + 1);
+		  sendData(user, data_, 1, message.size() + 1);
 
 		}
 	      /************************************************
@@ -303,7 +323,7 @@ private:
 		  cout << "IsTyping message Received" << endl;
 
 		  // send response string
-		  do_write(user, data_, 1, message.size() + 1);
+		  sendData(user, data_, 1, message.size() + 1);
 
 		}
 	   
@@ -311,9 +331,8 @@ private:
 	});
   }
 
-  void do_write(Warden *user, char* msg, bool multi, std::size_t length)
+  void sendData(Warden *user, char* msg, bool multi, std::size_t length)
   {
-
     auto self(shared_from_this());
 
     // copy the message into the buffer to send to the specified socket
@@ -336,7 +355,7 @@ private:
 		    if (!ec)
 		      {
 			cout << "write: " << data_ << endl;
-			do_read();
+			getData();
 		      }
 		  });
 	  }
@@ -351,7 +370,7 @@ private:
 	   if (!ec)
 	     {
 	       cout << "write: " << data_ << endl;
-	       do_read();
+	       getData();
 	     }
 	 });
       }
@@ -387,7 +406,7 @@ private:
 	    string port = boost::lexical_cast<string>(socket_.remote_endpoint());
 	    cout << port << " " << &socket_ << endl;
 	    
-	    std::make_shared<session>(std::move(socket_))->start();
+	    std::make_shared<spreadSheetServer>(std::move(socket_))->start();
 	  }
 
 	do_accept();
@@ -404,7 +423,7 @@ int main(int argc, char* argv[])
     {
       if (argc != 2)
 	{
-	  std::cerr << "Usage: async_tcp_echo_server <port>\n";
+	  std::cerr << "Usage: " << argv[0] << "  <port>\n";
 	  return 1;
 	}
 
